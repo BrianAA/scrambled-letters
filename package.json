@@ -1,0 +1,25 @@
+{
+  "name": "main",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "chainData": "node ./lib/buildChainData",
+    "localData": "node ./lib/buildLocalData",
+    "create-guess": "node ./lib/buildGuess"
+  },
+  "dependencies": {
+    "@stitches/react": "^1.2.6",
+    "next": "12.0.10",
+    "react": "17.0.2",
+    "react-dom": "17.0.2",
+    "web3": "^1.2.4"
+  },
+  "devDependencies": {
+    "eslint": "8.8.0",
+    "eslint-config-next": "12.0.10"
+  }
+}
