@@ -6,6 +6,7 @@ import { scrambledLetters } from "../lib/src/guessData";
 import { alphabet } from "../lib/alphabet";
 import { theme, styled } from "../stitches.config";
 import LetterButton from "../components/LetterButton";
+import SubmittedLetter from "../components/SubmittedLetter";
 const H1 = styled("h1", {
   font: "cherry",
   color: theme.colors.secondary,
@@ -18,12 +19,15 @@ const H1 = styled("h1", {
 const P = styled("p", {
   color: theme.colors.secondary,
   fontSize: 16,
-  marginBottom: 48
+  maxWidth: 250,
+  lineHeight: 1.25,
+  marginBottom: 16
 })
 const LetterHolder = styled("div", {
   display: "flex",
   alignItems: "center",
   flexWrap: "wrap",
+  margin: "24px 0px",
   gap: 8,
   justifyContent: "center"
 })
@@ -84,9 +88,11 @@ export default function Home() {
         <H1 className="cherry">Scrambled Letters</H1>
         <P className="cherry">Solve the scrambled letters 3 letters do not belong</P>
         <LetterHolder>
-          {/* {Letters && Letters.map((_letter, i) => {
-            return <p>{alphabet[_letter]}</p>
-          })} */}
+          <SubmittedLetter />
+          <SubmittedLetter />
+          <SubmittedLetter />
+          <SubmittedLetter />
+          <SubmittedLetter />
         </LetterHolder>
         <LetterHolder>
           {scrambledLetters.map((letter, i) => {
