@@ -58,12 +58,14 @@ export default function Home() {
   }
 
   function handleClick(_letter) {
+
     let newLetters = Letters;
     console.log(`Letters length ${Letters.length}`, Letters)
     if (clickNoise) {
+      clickNoise.pause;
+      clickNoise.currentTime = 0;
       clickNoise.play();
     }
-
     if (!(Letters.length < 5)) return;
     newLetters.push(_letter);
     setLetters(Letters);
