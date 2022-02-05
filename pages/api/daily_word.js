@@ -34,7 +34,7 @@ const alphabet = {
 
 async function GenerateWord() {
   try {
-    let _chars = words[0].split("");
+    let _chars = words[1].split("");
     let _stringID = "";
     let _letters = [];
     for (let _char = 0; _char < _chars.length; _char++) {
