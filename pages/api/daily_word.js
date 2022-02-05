@@ -41,7 +41,6 @@ async function GenerateWord() {
       _stringID = _stringID + alphabet[_chars[_char]].key;
       _letters.push(alphabet[_chars[_char]].key);
     }
-    const _scrambledLetters = await ScrambleLetters(_letters);
     const _mainID = parseInt(_stringID);
     const _hashID = Web3.utils.keccak256(new BN(_mainID));
     const _hints = CreateHints(_letters);

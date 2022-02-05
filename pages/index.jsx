@@ -44,6 +44,7 @@ const H1 = styled("h1", {
   marginBottom: 4,
   textAlign: "center",
   "@sm": {
+    width: "100%",
     fontSize: 36
   }
 });
@@ -69,7 +70,9 @@ const P = styled("p", {
   lineHeight: 1.25,
   marginBottom: 16,
   "@sm": {
-    fontSize: 16
+    fontSize: 16,
+    padding: "0 16px",
+    maxWidth: "100%",
   }
 })
 
