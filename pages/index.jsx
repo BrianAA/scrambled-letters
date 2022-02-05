@@ -81,6 +81,7 @@ const LetterHolder = styled("div", {
   alignItems: "center",
   flexWrap: "wrap",
   margin: "20px 0px",
+  minHeight: 110,
   gap: 8,
   justifyContent: "center"
 })
