@@ -6,20 +6,7 @@ import { alphabet } from '../lib/alphabet';
 export default function LetterButton({ letter, handleClick, value }) {
 
     const [Pressed, setPressed] = useState(false);
-    useEffect(() => {
-        document.addEventListener("keydown", keyFunc, false);
 
-        return () => {
-            document.removeEventListener("keydown", keyFunc, false);
-        }
-    }, []);
-
-    function keyFunc(e) {
-        const _letter = alphabet[letter].toLowerCase();
-        if (e.key == _letter) {
-            handlePress()
-        }
-    }
 
     function handlePress() {
         setPressed(true)
@@ -52,6 +39,11 @@ export default function LetterButton({ letter, handleClick, value }) {
                     boxShadow: `0px 2px 0px ${theme.colors.secondary}`,
                 }
             }
+        },
+        "@sm": {
+            fontSize: 24,
+            height: 70,
+            width: 60,
         }
     })
     return (

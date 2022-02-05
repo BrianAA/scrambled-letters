@@ -5,9 +5,12 @@ body {
   font-family: Arial, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans,
     Helvetica Neue, sans-serif;
 }
+h1 {
+  min-height: 150;
+}
 @font-face {
   font-family: "cherry";
-  src: url("/fonts/CherryBomb-Regular.ttf"); /* IE9 Compat Modes */
+  src: url("/fonts/cherrybomb-regular-webfont.woff"); /* IE9 Compat Modes */
 }
 .cherry {
   font-family: cherry;
