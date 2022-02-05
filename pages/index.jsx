@@ -1,6 +1,6 @@
 import Head from "next/head";
 import { useState, useEffect } from "react";
-import Image from "next/image";
+import absoluteUrl from 'next-absolute-url'
 import styles from "../styles/Home.module.css";
 import { alphabet } from "../lib/alphabet";
 import { theme, styled } from "../stitches.config";
@@ -231,8 +231,9 @@ export default function Home(props) {
   );
 }
 
-Home.getInitialProps = async (ctx) => {
-  const res = await fetch(`http://localhost:${process.env.PORT || 3000}/api/daily_word`)
+Home.getInitialProps = async ({ req }) => {
+  const { protocol, host } = absoluteUrl(req)
+  const res = await fetch(`${protocol}//${host}/api/daily_word`)
   const json = await res.json()
   console.log(json);
   return { data: json }
