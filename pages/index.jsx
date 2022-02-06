@@ -1,4 +1,5 @@
 import Head from "next/head";
+import { useRouter } from 'next/router'
 import { useState, useEffect } from "react";
 import absoluteUrl from 'next-absolute-url'
 import styles from "../styles/Home.module.css";
@@ -7,6 +8,10 @@ import { theme, styled } from "../stitches.config";
 import LetterButton from "../components/LetterButton";
 import { motion } from "framer-motion"
 import SubmittedLetter from "../components/SubmittedLetter";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import react from "react";
+
 const Web3 = require("web3");
 const BN = Web3.utils.BN;
 
@@ -52,7 +57,6 @@ const H1 = styled("h1", {
 const Button = styled("button", {
   width: 200,
   height: 80,
-  marginTop: 16,
   backgroundColor: theme.colors.secondary,
   fontSize: 32,
   color: "white",
@@ -88,6 +92,7 @@ const LetterHolder = styled("div", {
 
 export default function Home(props) {
   console.log(props);
+  const router = useRouter()
   const scrambledLetters = props ? props.data.scrambledLetters : [];
   const hints = props ? props.data.hints : [];
   const Answer = props ? props.data.hashID : null;
@@ -132,8 +137,28 @@ export default function Home(props) {
     const isCorrect = (Web3.utils.keccak256(new BN(_mainID)) == Answer);
     if (!isCorrect) {
       setShake(true);
+      toast(<P><div>🥚</div> Sorry not it. This one a tough one to crack!</P>, {
+        position: "top-center",
+        autoClose: 1500,
+        hideProgressBar: true,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+    } else {
+      setCorrect(true);
+      toast(<P><div>🍳</div> Eggsellant! You cracked the code...on to the next one</P>, {
+        position: "top-center",
+        autoClose: 2000,
+        hideProgressBar: true,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        onClose: props => router.reload(window.location.pathname),
+      });
     }
-
   }
   const handleDelete = (index) => {
     if (Letters.length > 0) {
@@ -165,7 +190,7 @@ export default function Home(props) {
     setLetters(newLetters);
   }
   const SubmittedLetters = () => {
-    return (<LetterHolder>
+    return (<LetterHolder css={{ marginBottom: 0 }}>
       {Letters.map((l, i) => {
         return (
           <motion.div
@@ -200,7 +225,7 @@ export default function Home(props) {
               animate={{ opacity: 1 }}
               transition={{ duration: .75, delay: .25 }}
             >
-              <P>Solve the scrambled letters 5 letters do not belong in the answer</P>
+              <P>Unscrambled the 5 letter word</P>
             </motion.div>
 
           </BrandHolder>
@@ -213,7 +238,7 @@ export default function Home(props) {
         >
           <SubmittedLetters />
         </motion.div>
-        <LetterHolder>
+        <LetterHolder css={{ marginBottom: 0 }}>
           {scrambledLetters && scrambledLetters.map((letter, i) => {
             return (
               <motion.div
@@ -231,6 +256,8 @@ export default function Home(props) {
           <Button onClick={CheckAnswer}>Submit</Button>
         </LetterHolder>
       </Main>
+      <ToastContainer
+      />
     </>
   );
 }

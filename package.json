@@ -19,6 +19,7 @@
     "next-absolute-url": "^1.2.2",
     "react": "17.0.2",
     "react-dom": "17.0.2",
+    "react-toastify": "^8.1.1",
     "web3": "^1.2.4"
   },
   "devDependencies": {
