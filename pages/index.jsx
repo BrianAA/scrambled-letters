@@ -1,6 +1,6 @@
 import Head from "next/head";
 import { useRouter } from 'next/router'
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import absoluteUrl from 'next-absolute-url'
 import styles from "../styles/Home.module.css";
 import { alphabet } from "../lib/alphabet";
@@ -10,7 +10,7 @@ import { motion } from "framer-motion"
 import SubmittedLetter from "../components/SubmittedLetter";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import react from "react";
+
 
 const Web3 = require("web3");
 const BN = Web3.utils.BN;
@@ -24,18 +24,19 @@ const ShakeNo = {
   default: { x: 0 },
 }
 const Main = styled("main", {
-  padding: "5rem 0",
+  height: "100vh",
   flex: 1,
   display: " flex",
+  maxWidth: 350,
+  margin: "0 auto",
+  paddingBottom: 150,
   flexDirection: "column",
   justifyContent: "center",
   alignItems: "center",
-  "@sm": {
-    padding: "3rem 0"
-  }
 })
 const BrandHolder = styled("div", {
   display: " flex",
+  width: "100%",
   flexDirection: "column",
   justifyContent: "center",
   alignItems: "center",
@@ -43,27 +44,38 @@ const BrandHolder = styled("div", {
 const H1 = styled("h1", {
   font: "cherry",
   color: theme.colors.secondary,
-  fontSize: 48,
-  width: 250,
+  width: "100%",
+  fontSize: 40,
   marginTop: 0,
   marginBottom: 4,
   textAlign: "center",
   "@sm": {
-    width: "100%",
+
     fontSize: 36
   }
 });
 
 const Button = styled("button", {
-  width: 200,
-  height: 80,
+  width: "100%",
+  height: 56,
   backgroundColor: theme.colors.secondary,
-  fontSize: 32,
+  fontSize: 28,
   color: "white",
   borderColor: theme.colors.secondary,
   boxShadow: `0px 2px 0px ${theme.colors.secondary}`,
   letterSpacing: ".1em",
   borderRadius: 4,
+  "@sm": {
+    fontSize: 24
+  },
+  variants: {
+    variant: {
+      Clear: {
+        backgroundColor: "#F2EAEF",
+        color: theme.colors.secondary,
+      }
+    }
+  }
 })
 const P = styled("p", {
   color: theme.colors.secondary,
@@ -79,19 +91,53 @@ const P = styled("p", {
     maxWidth: "100%",
   }
 })
+const Box = styled("div", {
+  width: "100%"
+})
 
 const LetterHolder = styled("div", {
   display: "flex",
   alignItems: "center",
   flexWrap: "wrap",
-  margin: "20px 0px",
-  minHeight: 110,
-  gap: 8,
-  justifyContent: "center"
+  margin: "16px 0px",
+  width: "100%",
+  minHeight: "auto",
+  justifyContent: "space-between"
 })
 
+const SubmittedLetters = React.memo(({ Letters, handleDelete }) => {
+  let EmptyArray = ["", "", "", "", ""]
+  for (let p = 0; p < Letters.length; p++) {
+    EmptyArray.pop();
+  }
+  return (
+    <LetterHolder>
+      {Letters.map((l, i) => {
+        return (
+          <motion.div
+            initial={FadeIn.hidden}
+            animate={FadeIn.reveal}
+            transition={{ type: "tween" }}
+            key={i}>
+            <SubmittedLetter handleDelete={() => handleDelete(i)} >{alphabet[l]}</SubmittedLetter>
+          </motion.div>)
+      })}
+      {EmptyArray.map((l, i) => {
+        return (
+          <motion.div
+            initial={FadeIn.hidden}
+            animate={FadeIn.reveal}
+            transition={{ type: "tween" }}
+            key={i}>
+            <SubmittedLetter isEmpty />
+          </motion.div>)
+      })}
+    </LetterHolder>
+  )
+})
+
+
 export default function Home(props) {
-  console.log(props);
   const router = useRouter()
   const scrambledLetters = props ? props.data.scrambledLetters : [];
   const hints = props ? props.data.hints : [];
@@ -100,16 +146,23 @@ export default function Home(props) {
   const [deleteSound, setDeleteSound] = useState(null);
   const [clickNoise, setClickNoise] = useState(null);
   const [Wrong, setWrongNoise] = useState(null);
+  const [ClearSound, setClearSound] = useState(null)
   const [Correct, setCorrect] = useState(false);
   const [Shake, setShake] = useState(false);
-
+  const [Time, setTime] = useState(0);
+  const [TotalSeconds, setTotalSeconds] = useState(0)
+  const [TotalMins, setTotalMin] = useState(0)
   useEffect(() => {
     const soundForDelete = new Audio("/audio/delete.mp3");
     const clickAudio = new Audio("/audio/click.mp3");
     const wrongAudio = new Audio("/audio/wrong.mp3");
+    const clearAudio = new Audio("/audio/clear.mp3");
+    clearAudio.volume = .45;
     setClickNoise(clickAudio);
     setDeleteSound(soundForDelete);
     setWrongNoise(wrongAudio);
+    setClearSound(clearAudio)
+    setTimeout(function () { currentTime() }, 1000);
   }, []);
 
   useEffect(() => {
@@ -126,6 +179,30 @@ export default function Home(props) {
 
   }, [Shake]);
 
+  function currentTime() {
+    if (TotalSeconds > 59) {
+      setTotalSeconds(0);
+      setTotalMin(TotalMins++);
+    } else {
+      setTotalSeconds(TotalSeconds++)
+    }
+
+    let formatMins = "";
+    let formatSeconds = "";
+    if (TotalMins < 10) {
+      formatMins = `0${TotalMins}`
+    } else {
+      formatMins = `${TotalMins}`
+    }
+    if (TotalSeconds < 10) {
+      formatSeconds = `:0${TotalSeconds}`
+    } else {
+      formatSeconds = `:${TotalSeconds}`
+    }
+    setTime(`${formatMins}${formatSeconds}`)
+    setTimeout(function () { currentTime() }, 1000);
+
+  }
 
   function CheckAnswer() {
     let _stringID = "";
@@ -160,6 +237,7 @@ export default function Home(props) {
       });
     }
   }
+
   const handleDelete = (index) => {
     if (Letters.length > 0) {
       let newLetters = [];
@@ -176,6 +254,14 @@ export default function Home(props) {
 
     }
   }
+  function handleClear() {
+    if (ClearSound) {
+      ClearSound.pause;
+      ClearSound.currentTime = 0;
+      ClearSound.play();
+    }
+    setLetters([])
+  }
 
   function handleClick(_letter) {
     let newLetters = [];
@@ -189,19 +275,7 @@ export default function Home(props) {
     newLetters.push(_letter);
     setLetters(newLetters);
   }
-  const SubmittedLetters = () => {
-    return (<LetterHolder css={{ marginBottom: 0 }}>
-      {Letters.map((l, i) => {
-        return (
-          <motion.div
-            initial={{ y: 10 }}
-            animate={{ y: 0 }}
-            key={i}>
-            <SubmittedLetter handleDelete={() => handleDelete(i)} >{alphabet[l]}</SubmittedLetter>
-          </motion.div>)
-      })}
-    </LetterHolder>)
-  }
+
   return (
     <>
       <Head>
@@ -226,19 +300,24 @@ export default function Home(props) {
               transition={{ duration: .75, delay: .25 }}
             >
               <P>Unscrambled the 5 letter word</P>
-            </motion.div>
 
+            </motion.div>
           </BrandHolder>
         </motion.div>
+        {/* <Box css={{ display: "flex", alignItems: "center", marginBottom: 20 }}>
+          <img src="/img/clock.svg" />
+          <Box css={{ paddingTop: 2, marginLeft: 8 }}>{Time}</Box>
+        </Box> */}
         <motion.div
+          style={{ width: "100%" }}
           initial="default"
           animate={Shake ? "shake" : "default"}
-          transition={{ type: "spring" }}
+          transition={{ type: "tween" }}
           variants={ShakeNo}
         >
-          <SubmittedLetters />
+          <SubmittedLetters handleDelete={handleDelete} Letters={Letters} />
         </motion.div>
-        <LetterHolder css={{ marginBottom: 0 }}>
+        <LetterHolder>
           {scrambledLetters && scrambledLetters.map((letter, i) => {
             return (
               <motion.div
@@ -252,7 +331,8 @@ export default function Home(props) {
               </motion.div>)
           })}
         </LetterHolder>
-        <LetterHolder>
+        <LetterHolder css={{ maxWidth: 350, position: "absolute", bottom: 32, gridGap: "16px", display: "grid", gridTemplateColumns: "1fr 1fr", width: "100%" }}>
+          <Button onClick={handleClear} variant={'Clear'}>Clear</Button>
           <Button onClick={CheckAnswer}>Submit</Button>
         </LetterHolder>
       </Main>
@@ -266,7 +346,6 @@ Home.getInitialProps = async ({ req }) => {
   const { protocol, host } = absoluteUrl(req)
   const res = await fetch(`${protocol}//${host}/api/daily_word`)
   const json = await res.json()
-  console.log(json);
   return { data: json }
 }
 
