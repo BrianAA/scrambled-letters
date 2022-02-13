@@ -185,7 +185,6 @@ export default function Home(props) {
   }, [Shake]);
 
   useEffect(() => {
-
     if (Attempts == 0) {
       toast(<P><div>🥚</div>Game Over</P>, {
         position: "top-center",
@@ -292,21 +291,23 @@ export default function Home(props) {
     return (
       <>
         {Eggs.map((i) => {
-          return (<Container key={i} css={{ position: "relative", display: "flex", justifyContent: "center" }}>
-            <motion.div
-              animate="move"
-              variants={Rotate}
-              transition={{ type: "spring", ease: "easeInOut" }}
-              className={ImgContainer()}>
-              <motion.img alt="Egg body" src="/img/egg_body.svg" />
-            </motion.div>
-            <motion.img src="/img/egg_feet.svg" />
-          </Container>)
+          return (
+            <Container key={i} css={{ position: "relative", display: "flex", justifyContent: "center" }}>
+              <motion.div
+                animate="move"
+                variants={Rotate}
+                transition={{ type: "spring", ease: "easeInOut" }}
+                className={ImgContainer()}>
+                <motion.img alt="Egg body" src="/img/egg_body.svg" />
+              </motion.div>
+              <motion.img src="/img/egg_feet.svg" />
+            </Container>)
         })}
         {Yolk.map((i) => {
-          return (<Container css={{ position: "relative", display: "flex", height: "100%", alignItems: "flex-end", justifyContent: "center" }}>
-            <img src="/img/yolk.svg" />
-          </Container>)
+          return (
+            <Container key={i} css={{ position: "relative", display: "flex", height: "100%", alignItems: "flex-end", justifyContent: "center" }}>
+              <img src="/img/yolk.svg" />
+            </Container>)
         })}
       </>
     )
