@@ -79,6 +79,7 @@ function CreateHints(_letters) {
 async function ScrambleLetters(_letters) {
   let _fullLetterSet = [];
   let _extraLetters = [];
+  let _FinalLetterSet = [];
   let _index = 0;
 
   while (_index < 0) {
@@ -100,7 +101,11 @@ async function ScrambleLetters(_letters) {
       _fullLetterSet[_index],
     ];
   }
-  return _fullLetterSet;
+
+  for (let i = 0; i < _fullLetterSet.length; i++) {
+    _FinalLetterSet.push({ id: i, letter: _fullLetterSet[i] });
+  }
+  return _FinalLetterSet;
 }
 
 function CheckIfVowel(_letter) {

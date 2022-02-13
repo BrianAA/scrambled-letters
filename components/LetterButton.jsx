@@ -3,17 +3,16 @@ import { styled, theme } from '../stitches.config';
 import { alphabet } from '../lib/alphabet';
 
 
-export default function LetterButton({ letter, handleClick, value }) {
+export default function LetterButton({ letterInfo, Used, handleClick, value }) {
 
     const [Pressed, setPressed] = useState(false);
-
 
     function handlePress() {
         setPressed(true)
         setTimeout(() => {
             setPressed(false)
         }, 100);
-        handleClick(letter);
+        handleClick(letterInfo);
     }
 
     const LetterButton = styled("button", {
@@ -38,6 +37,14 @@ export default function LetterButton({ letter, handleClick, value }) {
                 false: {
                     boxShadow: `0px 2px 0px ${theme.colors.secondary}`,
                 }
+            },
+            used: {
+                true: {
+                    opacity: .5,
+                },
+                false: {
+                    opacity: 1,
+                }
             }
         },
         "@sm": {
@@ -49,10 +56,12 @@ export default function LetterButton({ letter, handleClick, value }) {
     return (
         <LetterButton
             pressed={Pressed ? "true" : "false"}
+            used={Used ? "true" : "false"}
+            disabled={Used}
             onClick={handlePress}
             onMouseDown={handlePress}
         >
-            {alphabet[letter]}
+            {alphabet[letterInfo.letter]}
         </LetterButton>)
 
 }

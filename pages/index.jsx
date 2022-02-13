@@ -4,23 +4,41 @@ import React, { useState, useEffect } from "react";
 import absoluteUrl from 'next-absolute-url'
 import styles from "../styles/Home.module.css";
 import { alphabet } from "../lib/alphabet";
-import { theme, styled } from "../stitches.config";
+import { theme, styled, css } from "../stitches.config";
 import LetterButton from "../components/LetterButton";
 import { motion } from "framer-motion"
-import SubmittedLetter from "../components/SubmittedLetter";
+import SubmittedLetters from "../components/SubmittedLetters";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import ScrambleLetters from "../components/ScrambleLetters";
 
 
 const Web3 = require("web3");
 const BN = Web3.utils.BN;
 
+const randomDuration = () => Math.random() * 0.07 + 0.23;
+
 const FadeIn = {
   hidden: { opacity: 0, y: "-100%" },
   reveal: { opacity: 1, y: "0%" },
 }
+
+const Rotate = {
+  move: {
+    transition: {
+      repeat: Infinity,
+      duration: .75,
+    }, rotate: [0, -8, 0, 8, 0]
+  },
+  reset: { rotate: 0 },
+}
 const ShakeNo = {
-  shake: { x: 1 },
+  shake: {
+    transition: {
+      repeat: Infinity,
+      duration: randomDuration()
+    }, x: [-2, 2]
+  },
   default: { x: 0 },
 }
 const Main = styled("main", {
@@ -29,7 +47,7 @@ const Main = styled("main", {
   display: " flex",
   maxWidth: 350,
   margin: "0 auto",
-  paddingBottom: 150,
+
   flexDirection: "column",
   justifyContent: "center",
   alignItems: "center",
@@ -47,7 +65,7 @@ const H1 = styled("h1", {
   width: "100%",
   fontSize: 40,
   marginTop: 0,
-  marginBottom: 4,
+  marginBottom: 0,
   textAlign: "center",
   "@sm": {
 
@@ -69,6 +87,13 @@ const Button = styled("button", {
     fontSize: 24
   },
   variants: {
+    isdisabled: {
+      true: {
+        opacity: .75,
+      }, false: {
+        opacity: 1
+      }
+    },
     variant: {
       Clear: {
         backgroundColor: "#F2EAEF",
@@ -77,13 +102,18 @@ const Button = styled("button", {
     }
   }
 })
+const Container = styled("div", {
+  display: "flex",
+  width: "100%",
+  gap: 16,
+})
 const P = styled("p", {
   color: theme.colors.secondary,
   textAlign: "center",
   letterSpacing: ".1em",
   fontSize: 18,
-  maxWidth: 300,
   lineHeight: 1.25,
+  marginTop: 8,
   marginBottom: 16,
   "@sm": {
     fontSize: 16,
@@ -91,50 +121,15 @@ const P = styled("p", {
     maxWidth: "100%",
   }
 })
-const Box = styled("div", {
-  width: "100%"
+
+const ImgContainer = css({
+  pointerEvents: "none",
+  position: "absolute"
 })
 
-const LetterHolder = styled("div", {
-  display: "flex",
-  alignItems: "center",
-  flexWrap: "wrap",
-  margin: "16px 0px",
-  width: "100%",
-  minHeight: "auto",
-  justifyContent: "space-between"
-})
 
-const SubmittedLetters = React.memo(({ Letters, handleDelete }) => {
-  let EmptyArray = ["", "", "", "", ""]
-  for (let p = 0; p < Letters.length; p++) {
-    EmptyArray.pop();
-  }
-  return (
-    <LetterHolder>
-      {Letters.map((l, i) => {
-        return (
-          <motion.div
-            initial={FadeIn.hidden}
-            animate={FadeIn.reveal}
-            transition={{ type: "tween" }}
-            key={i}>
-            <SubmittedLetter handleDelete={() => handleDelete(i)} >{alphabet[l]}</SubmittedLetter>
-          </motion.div>)
-      })}
-      {EmptyArray.map((l, i) => {
-        return (
-          <motion.div
-            initial={FadeIn.hidden}
-            animate={FadeIn.reveal}
-            transition={{ type: "tween" }}
-            key={i}>
-            <SubmittedLetter isEmpty />
-          </motion.div>)
-      })}
-    </LetterHolder>
-  )
-})
+
+
 
 
 export default function Home(props) {
@@ -144,25 +139,26 @@ export default function Home(props) {
   const Answer = props ? props.data.hashID : null;
   const [Letters, setLetters] = useState([]);
   const [deleteSound, setDeleteSound] = useState(null);
+  const [Attempts, setAttempts] = useState(5);
+  const [Correct, setCorrect] = useState(false);
   const [clickNoise, setClickNoise] = useState(null);
   const [Wrong, setWrongNoise] = useState(null);
   const [ClearSound, setClearSound] = useState(null)
-  const [Correct, setCorrect] = useState(false);
+  const [CrackSound, setCrackSound] = useState(null);
   const [Shake, setShake] = useState(false);
-  const [Time, setTime] = useState(0);
-  const [TotalSeconds, setTotalSeconds] = useState(0)
-  const [TotalMins, setTotalMin] = useState(0)
+
   useEffect(() => {
     const soundForDelete = new Audio("/audio/delete.mp3");
     const clickAudio = new Audio("/audio/click.mp3");
     const wrongAudio = new Audio("/audio/wrong.mp3");
     const clearAudio = new Audio("/audio/clear.mp3");
+    const crackAudio = new Audio("/audio/crack.mp3");
     clearAudio.volume = .45;
     setClickNoise(clickAudio);
+    setCrackSound(crackAudio);
     setDeleteSound(soundForDelete);
     setWrongNoise(wrongAudio);
     setClearSound(clearAudio)
-    setTimeout(function () { currentTime() }, 1000);
   }, []);
 
   useEffect(() => {
@@ -171,48 +167,51 @@ export default function Home(props) {
         Wrong.pause;
         Wrong.currentTime = 0;
         Wrong.play();
+        setTimeout(() => {
+          if (CrackSound) {
+            CrackSound.pause;
+            CrackSound.currentTime = 0;
+            CrackSound.play();
+            setAttempts(Attempts - 1);
+          }
+        }, 500);
       }
       setTimeout(() => {
         setShake(false);
-      }, 100);
+        setLetters([])
+      }, 1000);
     }
 
   }, [Shake]);
 
-  function currentTime() {
-    if (TotalSeconds > 59) {
-      setTotalSeconds(0);
-      setTotalMin(TotalMins++);
-    } else {
-      setTotalSeconds(TotalSeconds++)
-    }
+  useEffect(() => {
 
-    let formatMins = "";
-    let formatSeconds = "";
-    if (TotalMins < 10) {
-      formatMins = `0${TotalMins}`
-    } else {
-      formatMins = `${TotalMins}`
+    if (Attempts == 0) {
+      toast(<P><div>🥚</div>Game Over</P>, {
+        position: "top-center",
+        autoClose: 1500,
+        hideProgressBar: true,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
     }
-    if (TotalSeconds < 10) {
-      formatSeconds = `:0${TotalSeconds}`
-    } else {
-      formatSeconds = `:${TotalSeconds}`
-    }
-    setTime(`${formatMins}${formatSeconds}`)
-    setTimeout(function () { currentTime() }, 1000);
+  }, [Attempts])
 
-  }
 
   function CheckAnswer() {
     let _stringID = "";
+    let _word = "";
     for (let i = 0; i < Letters.length; i++) {
-      _stringID = _stringID + Letters[i];
+      _stringID = _stringID + Letters[i].letter;
+      _word = _word + alphabet[Letters[i].letter];
     }
     const _mainID = parseInt(_stringID);
 
     const isCorrect = (Web3.utils.keccak256(new BN(_mainID)) == Answer);
     if (!isCorrect) {
+      console.log(_word);
       setShake(true);
       toast(<P><div>🥚</div> Sorry not it. This one a tough one to crack!</P>, {
         position: "top-center",
@@ -223,6 +222,7 @@ export default function Home(props) {
         draggable: true,
         progress: undefined,
       });
+
     } else {
       setCorrect(true);
       toast(<P><div>🍳</div> Eggsellant! You cracked the code...on to the next one</P>, {
@@ -254,7 +254,7 @@ export default function Home(props) {
 
     }
   }
-  function handleClear() {
+  function handleClear(playSound) {
     if (ClearSound) {
       ClearSound.pause;
       ClearSound.currentTime = 0;
@@ -273,7 +273,45 @@ export default function Home(props) {
     }
     if (!(Letters.length < 5)) return;
     newLetters.push(_letter);
+    console.log(_letter);
     setLetters(newLetters);
+  }
+
+  const HealthBar = () => {
+    let Eggs = [1, 2, 3, 4, 5];
+    let Yolk = [1, 2, 3, 4, 5];
+
+    for (let i = 0; i < 5; i++) {
+      if (i < Attempts) {
+        Yolk.pop();
+      } else {
+        Eggs.pop();
+      }
+    }
+
+    return (
+      <>
+        {Eggs.map((i) => {
+          return (<Container key={i} css={{ position: "relative", display: "flex", justifyContent: "center" }}>
+            <motion.div
+              animate="move"
+              variants={Rotate}
+              transition={{ type: "spring", ease: "easeInOut" }}
+              className={ImgContainer()}>
+              <motion.img alt="Egg body" src="/img/egg_body.svg" />
+            </motion.div>
+            <motion.img src="/img/egg_feet.svg" />
+          </Container>)
+        })}
+        {Yolk.map((i) => {
+          return (<Container css={{ position: "relative", display: "flex", height: "100%", alignItems: "flex-end", justifyContent: "center" }}>
+            <img src="/img/yolk.svg" />
+          </Container>)
+        })}
+      </>
+    )
+
+
   }
 
   return (
@@ -299,42 +337,36 @@ export default function Home(props) {
               animate={{ opacity: 1 }}
               transition={{ duration: .75, delay: .25 }}
             >
-              <P>Unscrambled the 5 letter word</P>
-
+              <P>Solve the 5 letter word in 5 attempts using the letters below.</P>
             </motion.div>
           </BrandHolder>
         </motion.div>
-        {/* <Box css={{ display: "flex", alignItems: "center", marginBottom: 20 }}>
-          <img src="/img/clock.svg" />
-          <Box css={{ paddingTop: 2, marginLeft: 8 }}>{Time}</Box>
-        </Box> */}
+        <Container css={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <HealthBar />
+        </Container>
+
         <motion.div
           style={{ width: "100%" }}
           initial="default"
           animate={Shake ? "shake" : "default"}
-          transition={{ type: "tween" }}
+          transition={{ type: "spring", ease: "easeInOut", duration: 100 }}
           variants={ShakeNo}
         >
           <SubmittedLetters handleDelete={handleDelete} Letters={Letters} />
         </motion.div>
-        <LetterHolder>
-          {scrambledLetters && scrambledLetters.map((letter, i) => {
-            return (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 50 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: .1, delay: .2 * i }}
-              >
+        <ScrambleLetters handleClick={handleClick} Letters={Letters} scrambledLetters={scrambledLetters} />
+        <Container>
+          {Attempts > 0 ?
+            <>
+              <Button isdisabled={Letters.length < 1} disabled={Letters.length < 1} onClick={handleClear} variant={'Clear'}>Clear</Button>
+              <Button isdisabled={Letters.length < 5} disabled={Letters.length < 5} onClick={Correct ? () => router.reload(window.location.pathname) : CheckAnswer}>{Correct ? "Next" : "Submit"}</Button>
+            </>
+            :
+            <Button onClick={() => router.reload(window.location.pathname)}>New Word</Button>
+          }
 
-                <LetterButton handleClick={handleClick} letter={letter} />
-              </motion.div>)
-          })}
-        </LetterHolder>
-        <LetterHolder css={{ maxWidth: 350, position: "absolute", bottom: 32, gridGap: "16px", display: "grid", gridTemplateColumns: "1fr 1fr", width: "100%" }}>
-          <Button onClick={handleClear} variant={'Clear'}>Clear</Button>
-          <Button onClick={CheckAnswer}>Submit</Button>
-        </LetterHolder>
+
+        </Container>
       </Main>
       <ToastContainer
       />
