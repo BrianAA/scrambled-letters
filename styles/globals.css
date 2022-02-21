@@ -24,3 +24,7 @@ a {
 * {
   box-sizing: border-box;
 }
+
+.Toastify__toast-container--top-center {
+  top: 10em !important;
+}

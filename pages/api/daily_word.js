@@ -32,10 +32,10 @@ const alphabet = {
   z: { key: 26, points: 10 },
 };
 
-async function GenerateWord() {
+async function GenerateWord(index) {
   try {
-    const random = Math.floor(Math.random() * words.length);
-    let _chars = words[random].split("");
+    if (index > words.length && index >= 0) throw Error;
+    let _chars = words[index].split("");
     let _stringID = "";
     let _letters = [];
     for (let _char = 0; _char < _chars.length; _char++) {
@@ -82,26 +82,19 @@ async function ScrambleLetters(_letters) {
   let _FinalLetterSet = [];
   let _index = 0;
 
-  while (_index < 0) {
-    let _randomLetter = Math.floor(Math.random() * 26);
-    while (_letters.includes(_randomLetter) || _randomLetter == 0) {
-      _randomLetter = Math.floor(Math.random() * 26);
-    }
-    _extraLetters.push(_randomLetter);
-    _index++;
-  }
   _fullLetterSet = [..._letters, ..._extraLetters];
   _index = _fullLetterSet.length;
   while (_index != 0) {
     const _randomIndex = Math.floor(Math.random() * _fullLetterSet.length);
-    _index--;
+    if (_fullLetterSet[_randomIndex] != _fullLetterSet[_index]) {
+      _index--;
+    }
 
     [_fullLetterSet[_index], _fullLetterSet[_randomIndex]] = [
       _fullLetterSet[_randomIndex],
       _fullLetterSet[_index],
     ];
   }
-
   for (let i = 0; i < _fullLetterSet.length; i++) {
     _FinalLetterSet.push({ id: i, letter: _fullLetterSet[i] });
   }
@@ -134,10 +127,35 @@ function CheckIfVowel(_letter) {
 }
 
 export default async function handler(req, res) {
-  const wordofTheDay = await GenerateWord();
-  if (wordofTheDay.success && wordofTheDay.scrambledLetters) {
-    res.status(200).json(wordofTheDay);
+  const date1 = new Date("Sunday, February 21, 2022 12:00:01 AM");
+  const date2 = new Date();
+  const diffTime = Math.abs(date2 - date1);
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  console.log(diffDays + " days");
+  const index = (diffDays - 1) * 5;
+  const datesAreOnSameDay = () =>
+    date1.getFullYear() === date2.getFullYear() &&
+    date1.getMonth() === date2.getMonth() &&
+    date1.getDate() === date2.getDate();
+
+  const word1 = await GenerateWord(index);
+  const word2 = await GenerateWord(index + 1);
+  const word3 = await GenerateWord(index + 2);
+  const word4 = await GenerateWord(index + 3);
+  const word5 = await GenerateWord(index + 4);
+  const word6 = await GenerateWord(index + 5);
+  const word7 = await GenerateWord(index + 6);
+  const word8 = await GenerateWord(index + 7);
+  const word9 = await GenerateWord(index + 8);
+  const word10 = await GenerateWord(index + 9);
+
+  const words = [];
+
+  words.push(word1, word2, word3, word4, word5);
+
+  if (words.length == 5) {
+    res.status(200).json({ new_date: datesAreOnSameDay, words: words });
   } else {
-    res.status(500).json(wordofTheDay);
+    res.status(500).json({ success: false });
   }
 }

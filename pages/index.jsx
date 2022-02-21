@@ -1,11 +1,10 @@
 import Head from "next/head";
 import { useRouter } from 'next/router'
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import absoluteUrl from 'next-absolute-url'
 import styles from "../styles/Home.module.css";
 import { alphabet } from "../lib/alphabet";
 import { theme, styled, css } from "../stitches.config";
-import LetterButton from "../components/LetterButton";
 import { motion } from "framer-motion"
 import SubmittedLetters from "../components/SubmittedLetters";
 import { ToastContainer, toast } from 'react-toastify';
@@ -31,15 +30,6 @@ const Rotate = {
     }, rotate: [0, -8, 0, 8, 0]
   },
   reset: { rotate: 0 },
-}
-const ShakeNo = {
-  shake: {
-    transition: {
-      repeat: Infinity,
-      duration: randomDuration()
-    }, x: [-2, 2]
-  },
-  default: { x: 0 },
 }
 const Main = styled("main", {
   height: "100vh",
@@ -134,63 +124,157 @@ const ImgContainer = css({
 
 export default function Home(props) {
   const router = useRouter()
-  const scrambledLetters = props ? props.data.scrambledLetters : [];
-  const hints = props ? props.data.hints : [];
-  const Answer = props ? props.data.hashID : null;
+  const [Loading, setLoading] = useState(true);
+  const [CurrentWord, setCurrentWord] = useState(null)
+  const [scrambledLetters, setscrambledLetters] = useState([])
+  const [Answer, setAnswer] = useState(null)
   const [Letters, setLetters] = useState([]);
   const [deleteSound, setDeleteSound] = useState(null);
   const [Attempts, setAttempts] = useState(5);
   const [Correct, setCorrect] = useState(false);
+  const [GameState, setGameState] = useState("inProgress");
   const [clickNoise, setClickNoise] = useState(null);
   const [Wrong, setWrongNoise] = useState(null);
   const [ClearSound, setClearSound] = useState(null)
   const [CrackSound, setCrackSound] = useState(null);
-  const [Shake, setShake] = useState(false);
-
-  useEffect(() => {
+  const [Copied, setCopied] = useState(false)
+  const CopyButton = useRef();
+  const FinishedToast = () => {
+    return (<P as="div" css={{ textAlign: "center" }}>
+      <img width="100%" height="auto" src="/img/winner.gif" />
+      <P as="span" css={{ fontSize: 20, width: "90%" }} className="cherry">You unscrambled today's set of words</P>
+      <P as="div" css={{ fontSize: 16, width: "100%" }} >Come back tomorrow for a new set of scrambled words</P>
+      <Button ref={CopyButton} css={{ fontSize: 16 }} onClick={handleCopy}>Share</Button>
+    </P>)
+  }
+  const GameOverToast = () => {
+    return (<P as="div" css={{ textAlign: "center" }}>
+      <img width="100%" height="auto" src="/img/gameover.gif" />
+      <P as="span" css={{ fontSize: 24, width: "90%" }} className="cherry">Game over</P>
+      <P as="div" css={{ fontSize: 16, width: "100%" }} >Come back tomorrow for some fresh eggs and new words</P>
+      <Button ref={CopyButton} css={{ fontSize: 16 }} onClick={handleCopy}>Share</Button>
+    </P>)
+  }
+  const correctToast = () => {
+    return (<P as="div" css={{ textAlign: "center" }}>
+      <img width="100%" height="auto" src="/img/winner2.gif" />
+      <P as="span" css={{ width: "90%" }} className="cherry">Eggsellent...on to the next word</P>
+    </P>)
+  }
+  useEffect(async () => {
+    const attempts = window.localStorage.getItem("attempts");
+    const localIndex = window.localStorage.getItem("index");
+    const lastPlayed = window.localStorage.getItem("lastPlayed");
     const soundForDelete = new Audio("/audio/delete.mp3");
     const clickAudio = new Audio("/audio/click.mp3");
     const wrongAudio = new Audio("/audio/wrong.mp3");
     const clearAudio = new Audio("/audio/clear.mp3");
     const crackAudio = new Audio("/audio/crack.mp3");
     clearAudio.volume = .45;
+
     setClickNoise(clickAudio);
     setCrackSound(crackAudio);
     setDeleteSound(soundForDelete);
     setWrongNoise(wrongAudio);
     setClearSound(clearAudio)
+
+    if (lastPlayed == null) {
+      window.localStorage.setItem("lastPlayed", new Date("02/20/2022"));
+      ResetGame();
+    } else {
+      if (datesAreOnSameDay(lastPlayed, new Date())) {
+        if (attempts && localIndex) {
+          setAttempts(attempts)
+          setCurrentWord(parseInt(localIndex));
+        } else {
+          ResetGame();
+        }
+      } else {
+        window.localStorage.setItem("lastPlayed", new Date());
+        ResetGame();
+      }
+    }
+    setLoading(false);
   }, []);
 
-  useEffect(() => {
-    if (Shake) {
-      if (Wrong) {
-        Wrong.pause;
-        Wrong.currentTime = 0;
-        Wrong.play();
-        setTimeout(() => {
-          if (CrackSound) {
-            CrackSound.pause;
-            CrackSound.currentTime = 0;
-            CrackSound.play();
-            setAttempts(Attempts - 1);
-          }
-        }, 500);
-      }
-      setTimeout(() => {
-        setShake(false);
-        setLetters([])
-      }, 1000);
-    }
+  function ResetGame() {
+    window.localStorage.setItem("attempts", Attempts);
+    window.localStorage.setItem("index", 0);
+    setAttempts(5);
+    setCurrentWord(0);
+  }
 
-  }, [Shake]);
+  function datesAreOnSameDay(lastPlayed, date2) {
+    const date1 = new Date(lastPlayed)
+    return (date1.getFullYear() === date2.getFullYear() &&
+      date1.getMonth() === date2.getMonth() &&
+      date1.getDate() === date2.getDate())
+  }
+  useEffect(() => {
+    console.log(CurrentWord);
+    if (GameState != "isDone") {
+      if (CurrentWord != null && CurrentWord < props.data.words.length) {
+        setscrambledLetters(props ? props.data.words[CurrentWord].scrambledLetters : [])
+        setAnswer(props ? props.data.words[CurrentWord].hashID : [])
+      }
+      if (CurrentWord == props.data.words.length) {
+        setGameState("isDone")
+        setscrambledLetters([])
+        setAnswer(null)
+        toast(FinishedToast, {
+          position: "top-center",
+          autoClose: false,
+          hideProgressBar: true,
+          closeOnClick: false,
+          pauseOnHover: false,
+          draggable: false,
+          progress: undefined,
+          onClose: () => {
+            setCurrentWord(3);
+          }
+        });
+      }
+    }
+  }, [CurrentWord])
+
+  async function handleCopy() {
+    let stringEggs = "";
+    for (let i = 0; i < 5; i++) {
+      if (i > Attempts - 1) {
+        stringEggs = stringEggs + "🍳 "
+      } else {
+        stringEggs = stringEggs + "🥚 "
+      }
+    }
+    console.log(CopyButton.current);
+    console.log("Copied");
+    CopyButton.current.innerText = "Copied!"
+    await window.navigator.clipboard.writeText(`${stringEggs} I unscrambled ${CurrentWord}/${props.data.words.length} words today www.scrambledletters.com`)
+    setTimeout(() => {
+      CopyButton.current.innerText = "Share"
+    }, 1000);
+  }
+
+  useEffect(() => {
+    if (Correct) {
+      window.localStorage.setItem("index", CurrentWord);
+      setTimeout(() => {
+        setCorrect(false);
+        setLetters([]);
+      }, 100);
+    }
+  }, [Correct])
+
 
   useEffect(() => {
     if (Attempts == 0) {
-      toast(<P><div>🥚</div>Game Over</P>, {
+      setGameState("isDone")
+      setLetters([]);
+      toast(GameOverToast, {
         position: "top-center",
-        autoClose: 1500,
+        autoClose: false,
         hideProgressBar: true,
-        closeOnClick: true,
+        closeOnClick: false,
         pauseOnHover: true,
         draggable: true,
         progress: undefined,
@@ -207,35 +291,52 @@ export default function Home(props) {
       _word = _word + alphabet[Letters[i].letter];
     }
     const _mainID = parseInt(_stringID);
-
     const isCorrect = (Web3.utils.keccak256(new BN(_mainID)) == Answer);
-    if (!isCorrect) {
-      console.log(_word);
-      setShake(true);
-      toast(<P><div>🥚</div> Sorry not it. This one a tough one to crack!</P>, {
-        position: "top-center",
-        autoClose: 1500,
-        hideProgressBar: true,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-      });
+    if (isCorrect) {
+      if (CurrentWord < props.data.words.length) {
+        toast(correctToast, {
+          position: "top-center",
+          autoClose: 1500,
+          hideProgressBar: true,
+          closeOnClick: false,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          onClose: () => {
+            let index = CurrentWord + 1;
+            setCurrentWord(index);
+            setCorrect(true);
+          }
+        });
+      } else {
+        setGameState("isDone")
 
+      }
     } else {
-      setCorrect(true);
-      toast(<P><div>🍳</div> Eggsellant! You cracked the code...on to the next one</P>, {
-        position: "top-center",
-        autoClose: 2000,
-        hideProgressBar: true,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        onClose: props => router.reload(window.location.pathname),
-      });
+      handleWrong();
     }
   }
+
+  function handleWrong() {
+    if (Wrong) {
+      Wrong.pause;
+      Wrong.currentTime = 0;
+      Wrong.play();
+      setTimeout(() => {
+        if (CrackSound) {
+          CrackSound.pause;
+          CrackSound.currentTime = 0;
+          CrackSound.play();
+          setAttempts(Attempts - 1);
+        }
+      }, 500);
+      window.localStorage.setItem("attempts", Attempts - 1);
+    }
+    setTimeout(() => {
+      setLetters([])
+    }, 1000);
+  }
+
 
   const handleDelete = (index) => {
     if (Letters.length > 0) {
@@ -322,54 +423,56 @@ export default function Home(props) {
         <meta name="description" content="Daily word game where you try to solve the unscrambled words. There are 2 letters that do no belong in the word. Can you figure it out?" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-
-      <Main className={styles.main}>
-        <motion.div
-          initial="hidden"
-          animate="reveal"
-          variants={FadeIn}
-          transition={{ duration: .75, ease: "easeInOut", type: "spring" }}
-        >
-          <BrandHolder>
-            <img src="/img/eggs.svg" />
-            <H1 className="cherry">Scrambled Letters</H1>
+      {
+        Loading ?
+          <P className="cherry">...Loading Game</P>
+          :
+          <Main className={styles.main}>
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: .75, delay: .25 }}
+              initial="hidden"
+              animate="reveal"
+              variants={FadeIn}
+              transition={{ duration: .75, ease: "easeInOut", type: "spring" }}
             >
-              <P>Solve the 5 letter word in 5 attempts using the letters below.</P>
+              <BrandHolder>
+                <img src="/img/eggs.svg" />
+                <H1 className="cherry">Scrambled Letters</H1>
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: .75, delay: .25 }}
+                >
+                  {GameState == "inProgress" ?
+                    <P>Unscramble the {props.data.words.length} words. Guess the wrong word and you break an egg.</P>
+                    :
+                    <P>
+                      Come back tomorrow for a new set of words
+                    </P>}
+                  {CurrentWord > 0 ? <P css={{ fontWeight: "bold" }}>{CurrentWord}/{props.data.words.length} words</P> : <P css={{ fontWeight: "bold" }}>0/{props.data.words.length} words</P>}
+                </motion.div>
+              </BrandHolder>
             </motion.div>
-          </BrandHolder>
-        </motion.div>
-        <Container css={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <HealthBar />
-        </Container>
+            <Container css={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <HealthBar />
+            </Container>
 
-        <motion.div
-          style={{ width: "100%" }}
-          initial="default"
-          animate={Shake ? "shake" : "default"}
-          transition={{ type: "spring", ease: "easeInOut", duration: 100 }}
-          variants={ShakeNo}
-        >
-          <SubmittedLetters handleDelete={handleDelete} Letters={Letters} />
-        </motion.div>
-        <ScrambleLetters handleClick={handleClick} Letters={Letters} scrambledLetters={scrambledLetters} />
-        <Container>
-          {Attempts > 0 ?
-            <>
-              <Button isdisabled={Letters.length < 1} disabled={Letters.length < 1} onClick={handleClear} variant={'Clear'}>Clear</Button>
-              <Button isdisabled={Letters.length < 5} disabled={Letters.length < 5} onClick={Correct ? () => router.reload(window.location.pathname) : CheckAnswer}>{Correct ? "Next" : "Submit"}</Button>
-            </>
-            :
-            <Button onClick={() => router.reload(window.location.pathname)}>New Word</Button>
-          }
+            <SubmittedLetters handleDelete={handleDelete} Letters={Letters} />
+            {Attempts > 0 &&
+              <ScrambleLetters handleClick={handleClick} Letters={Letters} scrambledLetters={scrambledLetters} />
+            }
+            <Container>
+              {GameState == "inProgress" &&
+                <>
+                  <Button isdisabled={Letters.length < 1} disabled={Letters.length < 1} onClick={handleClear} variant={'Clear'}>Clear</Button>
+                  <Button isdisabled={Letters.length < 5} disabled={Letters.length < 5} onClick={CheckAnswer}> Submit</Button>
+                </>
+              }
+            </Container>
+            <P href="https://www.buymeacoffee.com/designbaa" as="a" css={{ "&:hover": { opacity: .75 }, transition: "all .25s", position: "absolute", bottom: 10 }}><img src="/img/bmc-button.png" height="auto" width="150" /></P>
+          </Main>
+      }
 
-
-        </Container>
-      </Main>
-      <ToastContainer
+      <ToastContainer closeButton={false} autoClose={GameState == "isDone"} limit={1}
       />
     </>
   );
