@@ -145,6 +145,11 @@ export default function Home(props) {
       <P as="span" css={{ fontSize: 20, width: "90%" }} className="cherry">You unscrambled today{`'s`} set of words</P>
       <P as="div" css={{ fontSize: 16, width: "100%" }} >Come back tomorrow for a new set of scrambled words</P>
       <Button ref={CopyButton} css={{ fontSize: 16 }} onClick={handleCopy}>Share</Button>
+      <P as="div" css={{ "&:hover": { opacity: .75 }, transition: "all .25s", marginTop: 24, }}>
+        <a href="https://www.buymeacoffee.com/designbaa">
+          <img src="/img/bmc-button.png" height="auto" width="150" />
+        </a>
+      </P>
     </P>)
   }
   const GameOverToast = () => {
@@ -153,6 +158,11 @@ export default function Home(props) {
       <P as="span" css={{ fontSize: 24, width: "90%" }} className="cherry">Game over</P>
       <P as="div" css={{ fontSize: 16, width: "100%" }} >Come back tomorrow for some fresh eggs and new words</P>
       <Button ref={CopyButton} css={{ fontSize: 16 }} onClick={handleCopy}>Share</Button>
+      <P as="div" css={{ "&:hover": { opacity: .75 }, transition: "all .25s", marginTop: 24, }}>
+        <a href="https://www.buymeacoffee.com/designbaa">
+          <img src="/img/bmc-button.png" height="auto" width="150" />
+        </a>
+      </P>
     </P>)
   }
   const correctToast = () => {
@@ -468,7 +478,6 @@ export default function Home(props) {
                 </>
               }
             </Container>
-            <P href="https://www.buymeacoffee.com/designbaa" as="a" css={{ "&:hover": { opacity: .75 }, transition: "all .25s", position: "absolute", bottom: 10 }}><img src="/img/bmc-button.png" height="auto" width="150" /></P>
           </Main>
       }
 
