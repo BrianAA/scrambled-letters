@@ -142,7 +142,7 @@ export default function Home(props) {
   const FinishedToast = () => {
     return (<P as="div" css={{ textAlign: "center" }}>
       <img width="100%" height="auto" src="/img/winner.gif" />
-      <P as="span" css={{ fontSize: 20, width: "90%" }} className="cherry">You unscrambled today's set of words</P>
+      <P as="span" css={{ fontSize: 20, width: "90%" }} className="cherry">You unscrambled today{`'s`} set of words</P>
       <P as="div" css={{ fontSize: 16, width: "100%" }} >Come back tomorrow for a new set of scrambled words</P>
       <Button ref={CopyButton} css={{ fontSize: 16 }} onClick={handleCopy}>Share</Button>
     </P>)
