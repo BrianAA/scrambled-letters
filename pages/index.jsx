@@ -141,8 +141,8 @@ export default function Home(props) {
   const CopyButton = useRef();
   const FinishedToast = () => {
     return (<P as="div" css={{ textAlign: "center" }}>
-      <img width="100%" height="auto" src="/img/winner.gif" />
-      <P as="span" css={{ fontSize: 20, width: "90%" }} className="cherry">You unscrambled today{`'s`} set of words</P>
+      <P as="img" css={{ margin: "0 auto" }} width="60%" height="auto" src="/img/winner.gif" />
+      <P as="div" css={{ margin: "0 auto", fontSize: 20, width: "90%" }} className="cherry">You unscrambled today{`'s`} set of words</P>
       <P as="div" css={{ fontSize: 16, width: "100%" }} >Come back tomorrow for a new set of scrambled words</P>
       <Button ref={CopyButton} css={{ fontSize: 16 }} onClick={handleCopy}>Share</Button>
       <P as="div" css={{ "&:hover": { opacity: .75 }, transition: "all .25s", marginTop: 24, }}>
@@ -154,8 +154,8 @@ export default function Home(props) {
   }
   const GameOverToast = () => {
     return (<P as="div" css={{ textAlign: "center" }}>
-      <img width="100%" height="auto" src="/img/gameover.gif" />
-      <P as="span" css={{ fontSize: 24, width: "90%" }} className="cherry">Game over</P>
+      <P as="img" css={{ margin: "0 auto" }} width="50%" height="auto" src="/img/gameover.gif" />
+      <P as="div" css={{ fontSize: 24, width: "90%" }} className="cherry">Game over</P>
       <P as="div" css={{ fontSize: 16, width: "100%" }} >Come back tomorrow for some fresh eggs and new words</P>
       <Button ref={CopyButton} css={{ fontSize: 16 }} onClick={handleCopy}>Share</Button>
       <P as="div" css={{ "&:hover": { opacity: .75 }, transition: "all .25s", marginTop: 24, }}>
@@ -167,8 +167,8 @@ export default function Home(props) {
   }
   const correctToast = () => {
     return (<P as="div" css={{ textAlign: "center" }}>
-      <img width="100%" height="auto" src="/img/winner2.gif" />
-      <P as="span" css={{ width: "90%" }} className="cherry">Eggsellent...on to the next word</P>
+      <P as="img" css={{ margin: "0 auto" }} width="50%" height="auto" src="/img/winner2.gif" />
+      <P as="div" css={{ width: "90%" }} className="cherry">Eggsellent...on to the next word</P>
     </P>)
   }
   useEffect(async () => {
