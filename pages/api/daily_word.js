@@ -82,6 +82,14 @@ async function ScrambleLetters(_letters) {
   let _FinalLetterSet = [];
   let _index = 0;
 
+  while (_index < 0) {
+    let _randomLetter = Math.floor(Math.random() * 26);
+    while (_letters.includes(_randomLetter) || _randomLetter == 0) {
+      _randomLetter = Math.floor(Math.random() * 26);
+    }
+    _extraLetters.push(_randomLetter);
+    _index++;
+  }
   _fullLetterSet = [..._letters, ..._extraLetters];
   _index = _fullLetterSet.length;
   while (_index != 0) {
