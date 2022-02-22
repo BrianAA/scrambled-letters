@@ -499,7 +499,7 @@ export default function Home(props) {
                     transition={{ duration: .75, delay: .25 }}
                   >
                     {GameState == "inProgress" ?
-                      <P>Find today's word from these scrambled letters</P>
+                      <P>Find today{`'s`} word from these scrambled letters</P>
                       :
                       <P>
                         Come back tomorrow for for a new word
