@@ -7,10 +7,11 @@ const LetterHolder = styled("div", {
     display: "flex",
     alignItems: "center",
     rowGap: 16,
+    columnGap: 12,
     flexWrap: "wrap",
     margin: "16px 0px",
     width: "100%",
-    justifyContent: "space-between",
+    justifyContent: "center",
     minHeight: "auto",
 })
 

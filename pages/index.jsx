@@ -124,26 +124,30 @@ const ImgContainer = css({
 
 export default function Home(props) {
   const router = useRouter()
+  const hints = props.data ? props.data.words[0].hashHints : null;
   const [Loading, setLoading] = useState(true);
   const [CurrentWord, setCurrentWord] = useState(null)
   const [scrambledLetters, setscrambledLetters] = useState([])
-  const [Answer, setAnswer] = useState(null)
+  const [Answer, setAnswer] = useState(props.data ? props.data.words[0].hashID : null)
   const [Letters, setLetters] = useState([]);
   const [deleteSound, setDeleteSound] = useState(null);
   const [Attempts, setAttempts] = useState(5);
-  const [Correct, setCorrect] = useState(false);
+  const [Streaks, setStreaks] = useState(0);
+  const [PrevGame, setPrevGame] = useState(false);
+  const [Best, setBest] = useState(0);
   const [GameState, setGameState] = useState("inProgress");
   const [clickNoise, setClickNoise] = useState(null);
   const [Wrong, setWrongNoise] = useState(null);
   const [ClearSound, setClearSound] = useState(null)
   const [CrackSound, setCrackSound] = useState(null);
-  const [Copied, setCopied] = useState(false)
+  const [WinnerSound, setWinnerSound] = useState(null);
+  const [LoserSound, setLoserSound] = useState(null);
   const CopyButton = useRef();
   const FinishedToast = () => {
     return (<P as="div" css={{ textAlign: "center" }}>
       <P as="img" css={{ margin: "0 auto" }} width="60%" height="auto" src="/img/winner.gif" />
-      <P as="div" css={{ margin: "0 auto", fontSize: 20, width: "90%" }} className="cherry">You unscrambled today{`'s`} set of words</P>
-      <P as="div" css={{ fontSize: 16, width: "100%" }} >Come back tomorrow for a new set of scrambled words</P>
+      <P as="div" css={{ margin: "0 auto", fontSize: 20, width: "90%" }} className="cherry">You unscrambled today{`'s`} word</P>
+      <P as="div" css={{ fontSize: 16, width: "100%" }} >Come back tomorrow for a new word to unscramble</P>
       <Button ref={CopyButton} css={{ fontSize: 16 }} onClick={handleCopy}>Share</Button>
       <P as="div" css={{ "&:hover": { opacity: .75 }, transition: "all .25s", marginTop: 24, }}>
         <a href="https://www.buymeacoffee.com/designbaa">
@@ -156,7 +160,7 @@ export default function Home(props) {
     return (<P as="div" css={{ textAlign: "center" }}>
       <P as="img" css={{ margin: "0 auto" }} width="50%" height="auto" src="/img/gameover.gif" />
       <P as="div" css={{ margin: "0 auto", fontSize: 24, width: "90%" }} className="cherry">Game over</P>
-      <P as="div" css={{ fontSize: 16, width: "100%" }} >Come back tomorrow for some fresh eggs and new words</P>
+      <P as="div" css={{ fontSize: 16, width: "100%" }} >Come back tomorrow for some fresh eggs and a new word</P>
       <Button ref={CopyButton} css={{ fontSize: 16 }} onClick={handleCopy}>Share</Button>
       <P as="div" css={{ "&:hover": { opacity: .75 }, transition: "all .25s", marginTop: 24, }}>
         <a href="https://www.buymeacoffee.com/designbaa">
@@ -173,13 +177,19 @@ export default function Home(props) {
   }
   useEffect(async () => {
     const attempts = window.localStorage.getItem("attempts");
-    const localIndex = window.localStorage.getItem("index");
     const lastPlayed = window.localStorage.getItem("lastPlayed");
+    const _scrambledLetters = window.localStorage.getItem("letters");
+    const _gameState = window.localStorage.getItem("complete");
+    const _streak = window.localStorage.getItem("streak");
+    const _PrevGame = window.localStorage.getItem("prev");
+    const _Best = window.localStorage.getItem("best");
     const soundForDelete = new Audio("/audio/delete.mp3");
     const clickAudio = new Audio("/audio/click.mp3");
     const wrongAudio = new Audio("/audio/wrong.mp3");
     const clearAudio = new Audio("/audio/clear.mp3");
     const crackAudio = new Audio("/audio/crack.mp3");
+    const winnerAudio = new Audio("/audio/winner.mp3");
+    const loserAudio = new Audio("/audio/loser.mp3");
     clearAudio.volume = .45;
 
     setClickNoise(clickAudio);
@@ -187,15 +197,38 @@ export default function Home(props) {
     setDeleteSound(soundForDelete);
     setWrongNoise(wrongAudio);
     setClearSound(clearAudio)
+    setWinnerSound(winnerAudio);
+    setLoserSound(loserAudio)
+    if (_streak == null) {
+      window.localStorage.setItem("streak", 0);
+      window.localStorage.setItem("best", 0)
+    } else {
+      setStreaks(_streak)
+      if (_Best != null) {
+        setBest(_Best);
+      }
+    }
+
+    if (_PrevGame == null) {
+      window.localStorage.setItem("prev", false)
+    } else {
+      setPrevGame(_PrevGame);
+    }
 
     if (lastPlayed == null) {
       window.localStorage.setItem("lastPlayed", new Date("02/20/2022"));
       ResetGame();
     } else {
       if (datesAreOnSameDay(lastPlayed, new Date())) {
-        if (attempts && localIndex) {
+        if (attempts && _scrambledLetters && _gameState) {
           setAttempts(attempts)
-          setCurrentWord(parseInt(localIndex));
+          if (_gameState == "true") {
+            handleComplete(attempts);
+          } else {
+            setAttempts(attempts)
+            let _Deserialize = JSON.parse(_scrambledLetters);
+            setscrambledLetters(_Deserialize)
+          }
         } else {
           ResetGame();
         }
@@ -208,7 +241,10 @@ export default function Home(props) {
   }, []);
 
   function ResetGame() {
+    window.localStorage.setItem("complete", false);
     window.localStorage.setItem("attempts", Attempts);
+    setscrambledLetters(props ? props.data.words[0].scrambledLetters : []);
+    window.localStorage.setItem("letters", JSON.stringify(props.data.words[0].scrambledLetters));
     window.localStorage.setItem("index", 0);
     setAttempts(5);
     setCurrentWord(0);
@@ -220,65 +256,31 @@ export default function Home(props) {
       date1.getMonth() === date2.getMonth() &&
       date1.getDate() === date2.getDate())
   }
-  useEffect(() => {
-    console.log(CurrentWord);
-    if (GameState != "isDone") {
-      if (CurrentWord != null && CurrentWord < props.data.words.length) {
-        setscrambledLetters(props ? props.data.words[CurrentWord].scrambledLetters : [])
-        setAnswer(props ? props.data.words[CurrentWord].hashID : [])
-      }
-      if (CurrentWord == props.data.words.length) {
-        setGameState("isDone")
-        setscrambledLetters([])
-        setAnswer(null)
-        toast(FinishedToast, {
-          position: "top-center",
-          autoClose: false,
-          hideProgressBar: true,
-          closeOnClick: false,
-          pauseOnHover: false,
-          draggable: false,
-          progress: undefined,
-          onClose: () => {
-            setCurrentWord(3);
-          }
-        });
-      }
-    }
-  }, [CurrentWord])
+
 
   async function handleCopy() {
+    let localAttemps = window.localStorage.getItem("attempts");
     let stringEggs = "";
     for (let i = 0; i < 5; i++) {
-      if (i > Attempts - 1) {
+      if (i > localAttemps - 1) {
         stringEggs = stringEggs + "🍳 "
       } else {
         stringEggs = stringEggs + "🥚 "
       }
     }
-    console.log(CopyButton.current);
-    console.log("Copied");
     CopyButton.current.innerText = "Copied!"
-    await window.navigator.clipboard.writeText(`${stringEggs} I unscrambled ${CurrentWord}/${props.data.words.length} words today www.scrambledletters.com`)
+    await window.navigator.clipboard.writeText(`${stringEggs} I unscrambled today's word www.scrambledletters.com`)
     setTimeout(() => {
       CopyButton.current.innerText = "Share"
     }, 1000);
   }
 
-  useEffect(() => {
-    if (Correct) {
-      window.localStorage.setItem("index", CurrentWord);
-      setTimeout(() => {
-        setCorrect(false);
-        setLetters([]);
-      }, 100);
-    }
-  }, [Correct])
+
 
 
   useEffect(() => {
     if (Attempts == 0) {
-      setGameState("isDone")
+      setGameState("isLoser")
       setLetters([]);
       toast(GameOverToast, {
         position: "top-center",
@@ -288,6 +290,15 @@ export default function Home(props) {
         pauseOnHover: true,
         draggable: true,
         progress: undefined,
+        onOpen: () => {
+          if (LoserSound) {
+            LoserSound.pause;
+            LoserSound.currentTime = 0;
+            LoserSound.play();
+            window.localStorage.setItem("prev", false);
+            window.localStorage.setItem("streak", 0);
+          }
+        }
       });
     }
   }, [Attempts])
@@ -301,33 +312,68 @@ export default function Home(props) {
       _word = _word + alphabet[Letters[i].letter];
     }
     const _mainID = parseInt(_stringID);
-    const isCorrect = (Web3.utils.keccak256(new BN(_mainID)) == Answer);
-    if (isCorrect) {
-      if (CurrentWord < props.data.words.length) {
-        toast(correctToast, {
-          position: "top-center",
-          autoClose: 1500,
-          hideProgressBar: true,
-          closeOnClick: false,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-          onClose: () => {
-            let index = CurrentWord + 1;
-            setCurrentWord(index);
-            setCorrect(true);
-          }
-        });
-      } else {
-        setGameState("isDone")
+    const isCorrect = _mainID == Answer;
 
-      }
+    if (isCorrect) {
+
+      handleComplete();
+
     } else {
       handleWrong();
     }
   }
+  function handleComplete() {
+    setGameState("isWinner")
+    window.localStorage.setItem("complete", true);
+    setTimeout(() => {
+      toast(FinishedToast, {
+        position: "top-center",
+        autoClose: false,
+        hideProgressBar: true,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        onOpen: () => {
+          if (WinnerSound) {
+            WinnerSound.pause;
+            WinnerSound.currentTime = 0;
+            WinnerSound.play();
+            window.localStorage.setItem("prev", true);
+            window.localStorage.setItem("streak", parseInt(Streaks) + 1);
+            if ((parseInt(Streaks) + 1) > Best) {
+              setBest(parseInt(Streaks) + 1);
+              window.localStorage.setItem("best", parseInt(Streaks) + 1);
+            }
+          }
+        }
+      });
+    }, 500);
+  }
+  async function handleWrong() {
+    let newScramble = [];
+    newScramble = [...scrambledLetters];
+    let spliceAtIndex;
+    let hint = Math.floor(Math.random() * newScramble.length);
+    let testHint = newScramble[hint];
 
-  function handleWrong() {
+    let test = hints.find(elem => elem.letter == testHint.letter);
+
+    while (test) {
+      hint = Math.floor(Math.random() * newScramble.length);
+      testHint = newScramble[hint];
+      test = hints.find(elem => elem.letter == testHint.letter);
+    }
+
+    spliceAtIndex = newScramble.findIndex(elem => elem == testHint)
+
+
+    console.log(newScramble[spliceAtIndex]);
+    newScramble.splice(spliceAtIndex, 1);
+    const data = JSON.stringify(newScramble)
+    window.localStorage.setItem("letters", data);
+    setscrambledLetters(newScramble);
+
     if (Wrong) {
       Wrong.pause;
       Wrong.currentTime = 0;
@@ -364,7 +410,7 @@ export default function Home(props) {
 
     }
   }
-  function handleClear(playSound) {
+  function handleClear() {
     if (ClearSound) {
       ClearSound.pause;
       ClearSound.currentTime = 0;
@@ -383,7 +429,6 @@ export default function Home(props) {
     }
     if (!(Letters.length < 5)) return;
     newLetters.push(_letter);
-    console.log(_letter);
     setLetters(newLetters);
   }
 
@@ -433,55 +478,57 @@ export default function Home(props) {
         <meta name="description" content="Daily word game where you try to solve the unscrambled words. There are 2 letters that do no belong in the word. Can you figure it out?" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      {
-        Loading ?
-          <P className="cherry">...Loading Game</P>
-          :
-          <Main className={styles.main}>
-            <motion.div
-              initial="hidden"
-              animate="reveal"
-              variants={FadeIn}
-              transition={{ duration: .75, ease: "easeInOut", type: "spring" }}
-            >
-              <BrandHolder>
-                <img src="/img/eggs.svg" />
-                <H1 className="cherry">Scrambled Letters</H1>
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: .75, delay: .25 }}
-                >
-                  {GameState == "inProgress" ?
-                    <P>Unscramble the {props.data.words.length} words. Guess the wrong word and you break an egg.</P>
-                    :
-                    <P>
-                      Come back tomorrow for a new set of words
-                    </P>}
-                  {CurrentWord > 0 ? <P css={{ fontWeight: "bold" }}>{CurrentWord}/{props.data.words.length} words</P> : <P css={{ fontWeight: "bold" }}>0/{props.data.words.length} words</P>}
-                </motion.div>
-              </BrandHolder>
-            </motion.div>
-            <Container css={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <HealthBar />
-            </Container>
+      <Main className={styles.main}>
+        {
+          Loading ?
+            <P className="cherry">...Loading Game</P>
+            :
+            <>
+              <motion.div
+                initial="hidden"
+                animate="reveal"
+                variants={FadeIn}
+                transition={{ duration: .75, ease: "easeInOut", type: "spring" }}
+              >
+                <BrandHolder>
+                  <P as="img" css={{ margin: "0 auto" }} width="40%" height="auto" src="/img/eggs.svg" />
+                  <H1 className="cherry">Scrambled Letters</H1>
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: .75, delay: .25 }}
+                  >
+                    {GameState == "inProgress" ?
+                      <P>Find today's word from these scrambled letters</P>
+                      :
+                      <P>
+                        Come back tomorrow for for a new word
+                      </P>}
+                    {/* {CurrentWord > 0 ? <P css={{ fontWeight: "bold" }}>{CurrentWord}/{props.data.words.length} words</P> : <P css={{ fontWeight: "bold" }}>0/{props.data.words.length} words</P>} */}
+                  </motion.div>
+                </BrandHolder>
+              </motion.div>
+              <Container css={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <HealthBar />
+              </Container>
 
-            <SubmittedLetters handleDelete={handleDelete} Letters={Letters} />
-            {Attempts > 0 &&
-              <ScrambleLetters handleClick={handleClick} Letters={Letters} scrambledLetters={scrambledLetters} />
-            }
-            <Container>
-              {GameState == "inProgress" &&
-                <>
-                  <Button isdisabled={Letters.length < 1} disabled={Letters.length < 1} onClick={handleClear} variant={'Clear'}>Clear</Button>
-                  <Button isdisabled={Letters.length < 5} disabled={Letters.length < 5} onClick={CheckAnswer}> Submit</Button>
-                </>
+              <SubmittedLetters handleDelete={handleDelete} Letters={Letters} />
+              {Attempts > 0 &&
+                <ScrambleLetters handleClick={handleClick} Letters={Letters} scrambledLetters={scrambledLetters} />
               }
-            </Container>
-          </Main>
-      }
+              <Container>
+                {GameState == "inProgress" &&
+                  <>
+                    <Button isdisabled={Letters.length < 1} disabled={Letters.length < 1} onClick={handleClear} variant={'Clear'}>Clear</Button>
+                    <Button isdisabled={Letters.length < 5} disabled={Letters.length < 5} onClick={CheckAnswer}> Submit</Button>
+                  </>
+                }
+              </Container>
+            </>
+        }
+      </Main>
 
-      <ToastContainer closeButton={false} autoClose={GameState == "isDone"} limit={1}
+      <ToastContainer closeButton={false} autoClose={GameState != "inProgress"} limit={1}
       />
     </>
   );

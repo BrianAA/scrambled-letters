@@ -44,11 +44,14 @@ async function GenerateWord(index) {
     }
     const _mainID = parseInt(_stringID);
     const _hashID = Web3.utils.keccak256(new BN(_mainID));
-    const _hints = CreateHints(_letters);
+    const _hints = [];
 
+    for (let i = 0; i < _letters.length; i++) {
+      _hints.push({ id: i + 1, letter: _letters[i] });
+    }
     return {
       success: true,
-      hashID: _hashID,
+      hashID: _stringID,
       hashHints: _hints,
       scrambledLetters: await ScrambleLetters(_letters),
     };
@@ -82,7 +85,7 @@ async function ScrambleLetters(_letters) {
   let _FinalLetterSet = [];
   let _index = 0;
 
-  while (_index < 0) {
+  while (_index < 5) {
     let _randomLetter = Math.floor(Math.random() * 26);
     while (_letters.includes(_randomLetter) || _randomLetter == 0) {
       _randomLetter = Math.floor(Math.random() * 26);
@@ -104,7 +107,7 @@ async function ScrambleLetters(_letters) {
     ];
   }
   for (let i = 0; i < _fullLetterSet.length; i++) {
-    _FinalLetterSet.push({ id: i, letter: _fullLetterSet[i] });
+    _FinalLetterSet.push({ id: i + 1, letter: _fullLetterSet[i] });
   }
   return _FinalLetterSet;
 }
@@ -147,21 +150,21 @@ export default async function handler(req, res) {
     date1.getDate() === date2.getDate();
 
   const word1 = await GenerateWord(index);
-  const word2 = await GenerateWord(index + 1);
-  const word3 = await GenerateWord(index + 2);
-  const word4 = await GenerateWord(index + 3);
-  const word5 = await GenerateWord(index + 4);
-  const word6 = await GenerateWord(index + 5);
-  const word7 = await GenerateWord(index + 6);
-  const word8 = await GenerateWord(index + 7);
-  const word9 = await GenerateWord(index + 8);
-  const word10 = await GenerateWord(index + 9);
+  // const word2 = await GenerateWord(index + 1);
+  // const word3 = await GenerateWord(index + 2);
+  // const word4 = await GenerateWord(index + 3);
+  // const word5 = await GenerateWord(index + 4);
+  // const word6 = await GenerateWord(index + 5);
+  // const word7 = await GenerateWord(index + 6);
+  // const word8 = await GenerateWord(index + 7);
+  // const word9 = await GenerateWord(index + 8);
+  // const word10 = await GenerateWord(index + 9);
 
   const words = [];
 
-  words.push(word1, word2, word3, word4, word5);
+  words.push(word1);
 
-  if (words.length == 5) {
+  if (words.length) {
     res.status(200).json({ new_date: datesAreOnSameDay, words: words });
   } else {
     res.status(500).json({ success: false });
