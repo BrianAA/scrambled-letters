@@ -143,8 +143,21 @@ export default function Home(props) {
   const [LoserSound, setLoserSound] = useState(null);
   const CopyButton = useRef();
 
-  const GameOverToast = () => {
+  let FinishedToast = () => {
     return (<P as="div" css={{ textAlign: "center" }}>
+      <P as="img" css={{ pointerEvents: "none", margin: "0 auto" }} width="60%" height="auto" src="/img/winner.gif" />
+      <P as="div" css={{ margin: "0 auto", fontSize: 18, width: "100%" }} className="cherry">You unscrambled today{`'s`} word</P>
+      <P as="div" css={{ fontSize: 16, width: "100%" }} >Come back tomorrow for a new word to unscramble</P>
+      <Button ref={CopyButton} css={{ fontSize: 16 }} onClick={handleCopy}>Share</Button>
+      <P as="div" css={{ "&:hover": { opacity: .75 }, transition: "all .25s", marginTop: 24, }}>
+        <a href="https://www.buymeacoffee.com/designbaa">
+          <img src="/img/bmc-button.png" height="auto" width="150" />
+        </a>
+      </P>
+    </P>)
+  }
+  const GameOverToast = () => {
+    return (<P as="div" css={{ pointerEvents: "none", textAlign: "center" }}>
       <P as="img" css={{ margin: "0 auto" }} width="50%" height="auto" src="/img/gameover.gif" />
       <P as="div" css={{ margin: "0 auto", fontSize: 24, width: "90%" }} className="cherry">Game over</P>
       <P as="div" css={{ fontSize: 16, width: "100%" }} >Come back tomorrow for some fresh eggs and a new word</P>
@@ -289,23 +302,11 @@ export default function Home(props) {
     }
   }
   function handleComplete(addStreaks) {
-    let FinishedToast = () => {
-      return (<P as="div" css={{ textAlign: "center" }}>
-        <P as="img" css={{ margin: "0 auto" }} width="60%" height="auto" src="/img/winner.gif" />
-        <P as="div" css={{ margin: "0 auto", fontSize: 18, width: "100%" }} className="cherry">You unscrambled today{`'s`} word</P>
-        <P as="div" css={{ fontSize: 16, width: "100%" }} >Come back tomorrow for a new word to unscramble</P>
-        <Button ref={CopyButton} css={{ fontSize: 16 }} onClick={handleCopy}>Share</Button>
-        <P as="div" css={{ "&:hover": { opacity: .75 }, transition: "all .25s", marginTop: 24, }}>
-          <a href="https://www.buymeacoffee.com/designbaa">
-            <img src="/img/bmc-button.png" height="auto" width="150" />
-          </a>
-        </P>
-      </P>)
-    }
+    toast.clearWaitingQueue();
     setGameState("isWinner")
     window.localStorage.setItem("complete", true);
     setTimeout(() => {
-      toast(FinishedToast(Best, Streaks), {
+      toast(FinishedToast, {
         position: "top-center",
         autoClose: false,
         hideProgressBar: true,
@@ -325,6 +326,7 @@ export default function Home(props) {
     }, 500);
   }
   async function handleWrong() {
+    toast.clearWaitingQueue();
     let newScramble = [];
     newScramble = [...scrambledLetters];
     let spliceAtIndex;
@@ -447,7 +449,6 @@ export default function Home(props) {
       <Head>
         <title>Scrambled Letters</title>
         <meta name="description" content="Daily word game where you try to guess the word of the day from a set of scrambled letters" />
-        <link rel="icon" href="/favicon.ico" />
       </Head>
 
       <Main className={styles.main}>
@@ -495,6 +496,9 @@ export default function Home(props) {
                   </>
                 }
               </Container>
+              {GameState != "inProgess" &&
+                <P as="a" ref={CopyButton} css={{ textDecoration: "underline", cursor: "pointer", fontSize: 18 }} onClick={handleComplete}>Share</P>
+              }
               <P as="a" onClick={() => {
                 toast(<P as="div">
                   <P as="img" width="60%" height="auto" css={{ margin: "0 auto" }} src="/img/winner2.gif" />
@@ -509,6 +513,7 @@ export default function Home(props) {
               }} css={{ cursor: "pointer", textDecoration: "underline", marginTop: 24 }}>How to play</P>
             </>
         }
+
       </Main>
       <ToastContainer closeButton={false} autoClose={GameState != "inProgress"} limit={1}
       />

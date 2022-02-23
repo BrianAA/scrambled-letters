@@ -3,7 +3,9 @@ import Head from "next/head";
 function MyApp({ Component, pageProps }) {
   return (
     <>
-      <Head></Head>
+      <Head>
+        <link rel="icon" href="/img/fav.png" sizes="16x16" />
+      </Head>
       <Component {...pageProps} />
     </>
   );
