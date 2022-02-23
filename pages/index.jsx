@@ -507,7 +507,7 @@ export default function Home(props) {
 
 Home.getInitialProps = async ({ req }) => {
   const { protocol, host } = absoluteUrl(req)
-  const res = await fetch(`${protocol}//${host}/api/daily_word`)
+  const res = await fetch(`${protocol}//${host}/api/daily_word?date=${new Date()}`)
   const json = await res.json()
   return { data: json }
 }

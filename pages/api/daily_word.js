@@ -138,8 +138,9 @@ function CheckIfVowel(_letter) {
 }
 
 export default async function handler(req, res) {
+  console.log(req.query.date);
   const date1 = new Date("Sunday, February 21, 2022 12:00:01 AM");
-  const date2 = new Date();
+  const date2 = new Date(req.query.date);
   const diffTime = Math.abs(date2 - date1);
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   console.log(diffDays + " days");
