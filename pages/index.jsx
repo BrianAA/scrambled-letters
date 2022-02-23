@@ -32,15 +32,14 @@ const Rotate = {
   reset: { rotate: 0 },
 }
 const Main = styled("main", {
-  height: "100vh",
   flex: 1,
   display: " flex",
   maxWidth: 350,
   margin: "0 auto",
-
+  paddingTop: 24,
   flexDirection: "column",
   justifyContent: "center",
-  alignItems: "center",
+
 })
 const BrandHolder = styled("div", {
   display: " flex",
@@ -465,7 +464,7 @@ export default function Home(props) {
               >
                 <BrandHolder>
                   <P as="img" css={{ margin: "0 auto" }} width="40%" height="auto" src="/img/eggs.svg" />
-                  <H1 className="cherry">Scrambled Letters</H1>
+                  <H1 css={{ marginBottom: 0, lineHeight: 1.1, "@sm": { fontSize: 28 } }} className="cherry">Scrambled Letters</H1>
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -496,6 +495,18 @@ export default function Home(props) {
                   </>
                 }
               </Container>
+              <P as="a" onClick={() => {
+                toast(<P as="div">
+                  <P as="img" width="60%" height="auto" css={{ margin: "0 auto" }} src="/img/winner2.gif" />
+                  <P>
+                    Use the letters below to guess the word of the day. For each wrong guess a letter will be removed from the scrambled set. You have a total of 5 attempts before the word is revealed and it is game over.
+                  </P>
+                </P>, {
+                  position: "top-center",
+                  autoClose: false,
+                  closeButton: true,
+                })
+              }} css={{ cursor: "pointer", textDecoration: "underline", marginTop: 24 }}>How to play</P>
             </>
         }
       </Main>
