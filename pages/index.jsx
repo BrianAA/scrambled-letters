@@ -149,7 +149,7 @@ export default function Home(props) {
       <P as="img" css={{ margin: "0 auto" }} width="50%" height="auto" src="/img/gameover.gif" />
       <P as="div" css={{ margin: "0 auto", fontSize: 24, width: "90%" }} className="cherry">Game over</P>
       <P as="div" css={{ fontSize: 16, width: "100%" }} >Come back tomorrow for some fresh eggs and a new word</P>
-      <Button ref={CopyButton} css={{ fontSize: 16 }} onClick={handleCopy}>Share</Button>
+      <Button ref={CopyButton} css={{ fontSize: 16 }} onClick={() => handleCopy(false)}>Share</Button>
       <P as="div" css={{ "&:hover": { opacity: .75 }, transition: "all .25s", marginTop: 24, }}>
         <a href="https://www.buymeacoffee.com/designbaa">
           <img src="/img/bmc-button.png" height="auto" width="150" />
@@ -226,7 +226,7 @@ export default function Home(props) {
   }
 
 
-  async function handleCopy() {
+  async function handleCopy(won) {
     let localAttemps = window.localStorage.getItem("attempts");
     let stringEggs = "";
     for (let i = 0; i < 5; i++) {
@@ -237,7 +237,7 @@ export default function Home(props) {
       }
     }
     CopyButton.current.innerText = "Copied!"
-    await window.navigator.clipboard.writeText(`${stringEggs} I unscrambled today's word www.scrambledletters.com`)
+    await window.navigator.clipboard.writeText(`${stringEggs} I ${won ? "" : "did not"} unscrambled today's word www.scrambledletters.com`)
     setTimeout(() => {
       CopyButton.current.innerText = "Share"
     }, 1000);
