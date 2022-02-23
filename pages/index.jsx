@@ -446,7 +446,7 @@ export default function Home(props) {
     <>
       <Head>
         <title>Scrambled Letters</title>
-        <meta name="description" content="Daily word game where you try to solve the unscrambled words. There are 2 letters that do no belong in the word. Can you figure it out?" />
+        <meta name="description" content="Daily word game where you try to guess the word of the day from a set of scrambled letters" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
