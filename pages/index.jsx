@@ -143,19 +143,7 @@ export default function Home(props) {
   const [WinnerSound, setWinnerSound] = useState(null);
   const [LoserSound, setLoserSound] = useState(null);
   const CopyButton = useRef();
-  const FinishedToast = () => {
-    return (<P as="div" css={{ textAlign: "center" }}>
-      <P as="img" css={{ margin: "0 auto" }} width="60%" height="auto" src="/img/winner.gif" />
-      <P as="div" css={{ margin: "0 auto", fontSize: 20, width: "90%" }} className="cherry">You unscrambled today{`'s`} word</P>
-      <P as="div" css={{ fontSize: 16, width: "100%" }} >Come back tomorrow for a new word to unscramble</P>
-      <Button ref={CopyButton} css={{ fontSize: 16 }} onClick={handleCopy}>Share</Button>
-      <P as="div" css={{ "&:hover": { opacity: .75 }, transition: "all .25s", marginTop: 24, }}>
-        <a href="https://www.buymeacoffee.com/designbaa">
-          <img src="/img/bmc-button.png" height="auto" width="150" />
-        </a>
-      </P>
-    </P>)
-  }
+
   const GameOverToast = () => {
     return (<P as="div" css={{ textAlign: "center" }}>
       <P as="img" css={{ margin: "0 auto" }} width="50%" height="auto" src="/img/gameover.gif" />
@@ -169,20 +157,12 @@ export default function Home(props) {
       </P>
     </P>)
   }
-  const correctToast = () => {
-    return (<P as="div" css={{ textAlign: "center" }}>
-      <P as="img" css={{ margin: "0 auto" }} width="50%" height="auto" src="/img/winner2.gif" />
-      <P as="div" css={{ margin: "0 auto", width: "90%" }} className="cherry">Eggsellent...on to the next word</P>
-    </P>)
-  }
+
   useEffect(async () => {
     const attempts = window.localStorage.getItem("attempts");
     const lastPlayed = window.localStorage.getItem("lastPlayed");
     const _scrambledLetters = window.localStorage.getItem("letters");
     const _gameState = window.localStorage.getItem("complete");
-    const _streak = window.localStorage.getItem("streak");
-    const _PrevGame = window.localStorage.getItem("prev");
-    const _Best = window.localStorage.getItem("best");
     const soundForDelete = new Audio("/audio/delete.mp3");
     const clickAudio = new Audio("/audio/click.mp3");
     const wrongAudio = new Audio("/audio/wrong.mp3");
@@ -191,6 +171,8 @@ export default function Home(props) {
     const winnerAudio = new Audio("/audio/winner.mp3");
     const loserAudio = new Audio("/audio/loser.mp3");
     clearAudio.volume = .45;
+    winnerAudio.volume = .5;
+    loserAudio.volume = .5;
 
     setClickNoise(clickAudio);
     setCrackSound(crackAudio);
@@ -199,21 +181,7 @@ export default function Home(props) {
     setClearSound(clearAudio)
     setWinnerSound(winnerAudio);
     setLoserSound(loserAudio)
-    if (_streak == null) {
-      window.localStorage.setItem("streak", 0);
-      window.localStorage.setItem("best", 0)
-    } else {
-      setStreaks(_streak)
-      if (_Best != null) {
-        setBest(_Best);
-      }
-    }
 
-    if (_PrevGame == null) {
-      window.localStorage.setItem("prev", false)
-    } else {
-      setPrevGame(_PrevGame);
-    }
 
     if (lastPlayed == null) {
       window.localStorage.setItem("lastPlayed", new Date("02/20/2022"));
@@ -223,7 +191,7 @@ export default function Home(props) {
         if (attempts && _scrambledLetters && _gameState) {
           setAttempts(attempts)
           if (_gameState == "true") {
-            handleComplete(attempts);
+            handleComplete(false);
           } else {
             setAttempts(attempts)
             let _Deserialize = JSON.parse(_scrambledLetters);
@@ -295,8 +263,7 @@ export default function Home(props) {
             LoserSound.pause;
             LoserSound.currentTime = 0;
             LoserSound.play();
-            window.localStorage.setItem("prev", false);
-            window.localStorage.setItem("streak", 0);
+            setscrambledLetters(hints.sort())
           }
         }
       });
@@ -316,17 +283,30 @@ export default function Home(props) {
 
     if (isCorrect) {
 
-      handleComplete();
+      handleComplete(true);
 
     } else {
       handleWrong();
     }
   }
-  function handleComplete() {
+  function handleComplete(addStreaks) {
+    let FinishedToast = () => {
+      return (<P as="div" css={{ textAlign: "center" }}>
+        <P as="img" css={{ margin: "0 auto" }} width="60%" height="auto" src="/img/winner.gif" />
+        <P as="div" css={{ margin: "0 auto", fontSize: 18, width: "100%" }} className="cherry">You unscrambled today{`'s`} word</P>
+        <P as="div" css={{ fontSize: 16, width: "100%" }} >Come back tomorrow for a new word to unscramble</P>
+        <Button ref={CopyButton} css={{ fontSize: 16 }} onClick={handleCopy}>Share</Button>
+        <P as="div" css={{ "&:hover": { opacity: .75 }, transition: "all .25s", marginTop: 24, }}>
+          <a href="https://www.buymeacoffee.com/designbaa">
+            <img src="/img/bmc-button.png" height="auto" width="150" />
+          </a>
+        </P>
+      </P>)
+    }
     setGameState("isWinner")
     window.localStorage.setItem("complete", true);
     setTimeout(() => {
-      toast(FinishedToast, {
+      toast(FinishedToast(Best, Streaks), {
         position: "top-center",
         autoClose: false,
         hideProgressBar: true,
@@ -339,12 +319,7 @@ export default function Home(props) {
             WinnerSound.pause;
             WinnerSound.currentTime = 0;
             WinnerSound.play();
-            window.localStorage.setItem("prev", true);
-            window.localStorage.setItem("streak", parseInt(Streaks) + 1);
-            if ((parseInt(Streaks) + 1) > Best) {
-              setBest(parseInt(Streaks) + 1);
-              window.localStorage.setItem("best", parseInt(Streaks) + 1);
-            }
+            setscrambledLetters(hints.sort())
           }
         }
       });
@@ -366,9 +341,6 @@ export default function Home(props) {
     }
 
     spliceAtIndex = newScramble.findIndex(elem => elem == testHint)
-
-
-    console.log(newScramble[spliceAtIndex]);
     newScramble.splice(spliceAtIndex, 1);
     const data = JSON.stringify(newScramble)
     window.localStorage.setItem("letters", data);
@@ -478,6 +450,7 @@ export default function Home(props) {
         <meta name="description" content="Daily word game where you try to solve the unscrambled words. There are 2 letters that do no belong in the word. Can you figure it out?" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
+
       <Main className={styles.main}>
         {
           Loading ?
@@ -504,7 +477,6 @@ export default function Home(props) {
                       <P>
                         Come back tomorrow for for a new word
                       </P>}
-                    {/* {CurrentWord > 0 ? <P css={{ fontWeight: "bold" }}>{CurrentWord}/{props.data.words.length} words</P> : <P css={{ fontWeight: "bold" }}>0/{props.data.words.length} words</P>} */}
                   </motion.div>
                 </BrandHolder>
               </motion.div>
@@ -513,9 +485,9 @@ export default function Home(props) {
               </Container>
 
               <SubmittedLetters handleDelete={handleDelete} Letters={Letters} />
-              {Attempts > 0 &&
-                <ScrambleLetters handleClick={handleClick} Letters={Letters} scrambledLetters={scrambledLetters} />
-              }
+
+              <ScrambleLetters handleClick={handleClick} Letters={Letters} scrambledLetters={scrambledLetters} />
+
               <Container>
                 {GameState == "inProgress" &&
                   <>
@@ -527,7 +499,6 @@ export default function Home(props) {
             </>
         }
       </Main>
-
       <ToastContainer closeButton={false} autoClose={GameState != "inProgress"} limit={1}
       />
     </>

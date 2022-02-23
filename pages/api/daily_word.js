@@ -143,7 +143,7 @@ export default async function handler(req, res) {
   const diffTime = Math.abs(date2 - date1);
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   console.log(diffDays + " days");
-  const index = (diffDays - 1) * 5;
+  const index = diffDays - 1;
   const datesAreOnSameDay = () =>
     date1.getFullYear() === date2.getFullYear() &&
     date1.getMonth() === date2.getMonth() &&
