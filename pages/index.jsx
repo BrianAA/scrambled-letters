@@ -144,7 +144,7 @@ export default function Home(props) {
   const [SameDay, setSameDay] = useState(false);
   const CopyButton = useRef();
 
-  let FinishedToast = () => {
+  let FinishedToast = (ResetGame, toastID) => {
     return (<P as="div" css={{ textAlign: "center" }}>
       <P as="img" css={{ pointerEvents: "none", margin: "0 auto" }} width="60%" height="auto" src="/img/winner.gif" />
       <P as="div" css={{ margin: "0 auto", fontSize: 18, width: "100%" }} className="cherry">You unscrambled today{`'s`} word</P>
@@ -155,9 +155,11 @@ export default function Home(props) {
           <img src="/img/bmc-button.png" height="auto" width="150" />
         </a>
       </P>
+      <P as="button" css={{ textDecoration: "underline", userSelect: "none", border: "none", background: "transparent" }}
+        onClick={() => { ResetGame(); toast.dismiss(toastID) }}>Close</P>
     </P>)
   }
-  const GameOverToast = () => {
+  const GameOverToast = (ResetGame, toastID) => {
     return (<P as="div" css={{ pointerEvents: "none", textAlign: "center" }}>
       <P as="img" css={{ margin: "0 auto" }} width="50%" height="auto" src="/img/gameover.gif" />
       <P as="div" css={{ margin: "0 auto", fontSize: 24, width: "90%" }} className="cherry">Game over</P>
@@ -168,6 +170,8 @@ export default function Home(props) {
           <img src="/img/bmc-button.png" height="auto" width="150" />
         </a>
       </P>
+      <P as="button" css={{ textDecoration: "underline", userSelect: "none", border: "none", background: "transparent" }}
+        onClick={() => { ResetGame(); toast.dismiss(toastID) }}>Close</P>
     </P>)
   }
 
@@ -265,13 +269,13 @@ export default function Home(props) {
     if (Attempts == 0) {
       setGameState("isLoser")
       setLetters([]);
-      toast(GameOverToast, {
+      const failedToast = (GameOverToast(ResetGame, failedToast), {
         position: "top-center",
         autoClose: false,
         hideProgressBar: true,
         closeOnClick: false,
         pauseOnHover: true,
-        draggable: true,
+        draggable: false,
         progress: undefined,
         onOpen: () => {
           if (LoserSound) {
@@ -313,13 +317,13 @@ export default function Home(props) {
     setGameState("isWinner")
     window.localStorage.setItem("complete", true);
     setTimeout(() => {
-      toast(FinishedToast, {
+      const completeToast = toast(FinishedToast(ResetGame, completeToast), {
         position: "top-center",
         autoClose: false,
         hideProgressBar: true,
         closeOnClick: false,
         pauseOnHover: true,
-        draggable: true,
+        draggable: false,
         progress: undefined,
         onOpen: () => {
           if (WinnerSound) {
