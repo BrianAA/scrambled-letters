@@ -141,7 +141,6 @@ export default function Home(props) {
   const [CrackSound, setCrackSound] = useState(null);
   const [WinnerSound, setWinnerSound] = useState(null);
   const [LoserSound, setLoserSound] = useState(null);
-  const [SameDay, setSameDay] = useState(false);
   const CopyButton = useRef();
 
   let FinishedToast = (ResetGame, toastID) => {
@@ -204,9 +203,7 @@ export default function Home(props) {
       window.localStorage.setItem("lastPlayed", new Date("02/20/2022"));
       ResetGame();
     } else {
-      let isSameDay = datesAreOnSameDay(lastPlayed, new Date());
-      if (isSameDay) {
-        setSameDay(true);
+      if (datesAreOnSameDay(lastPlayed, new Date())) {
         if (attempts && _scrambledLetters && _gameState) {
           setAttempts(attempts)
           if (_gameState == "true") {
@@ -282,11 +279,7 @@ export default function Home(props) {
             LoserSound.pause;
             LoserSound.currentTime = 0;
             LoserSound.play();
-            if (!SameDay) {
-              setscrambledLetters(hints.sort())
-            } else {
-              setscrambledLetters([]);
-            }
+            setscrambledLetters(hints.sort())
           }
         }
       });
@@ -330,11 +323,7 @@ export default function Home(props) {
             WinnerSound.pause;
             WinnerSound.currentTime = 0;
             WinnerSound.play();
-            if (!SameDay) {
-              setscrambledLetters(hints.sort())
-            } else {
-              setscrambledLetters([]);
-            }
+            setscrambledLetters(hints.sort())
           }
         }
       });
@@ -511,6 +500,9 @@ export default function Home(props) {
                   </>
                 }
               </Container>
+              {GameState != "inProgess" &&
+                <P as="a" ref={CopyButton} css={{ textDecoration: "underline", cursor: "pointer", fontSize: 18 }} onClick={handleComplete}>Share</P>
+              }
               <P as="a" onClick={() => {
                 toast(<P as="div">
                   <P as="img" width="60%" height="auto" css={{ margin: "0 auto" }} src="/img/winner2.gif" />
