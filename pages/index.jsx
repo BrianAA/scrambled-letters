@@ -302,7 +302,7 @@ export default function Home(props) {
     await window.navigator.clipboard.writeText(
       `${stringEggs} I ${
         won ? "" : "did not"
-      } unscrambled today's word www.scrambledletters.com`
+      } unscrambled todays word www.scrambledletters.com`
     );
     setTimeout(() => {
       CopyButton.current.innerText = "Share";
