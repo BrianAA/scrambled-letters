@@ -356,7 +356,7 @@ export default function Home(props) {
                   transition={{ duration: 0.75, delay: 0.25 }}
                 >
                   {GameState == "inProgress" && (
-                    <P> Find today's word from these scrambled letters</P>
+                    <P> Find todays word from these scrambled letters</P>
                   )}
                   {GameState == "GameOver" && (
                     <P>Come back tomorrow for for a new word or play again</P>
