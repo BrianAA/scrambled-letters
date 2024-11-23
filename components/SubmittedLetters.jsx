@@ -37,7 +37,7 @@ const SubmittedLetters = React.memo(({ Letters, handleDelete }) => {
                         animate={SlideIn.reveal}
                         transition={{ type: "tween" }}
                         key={i}>
-                        <SubmittedLetter handleDelete={() => handleDelete(i)} >{alphabet[l.letter]}</SubmittedLetter>
+                        <SubmittedLetter handleDelete={() => handleDelete(i)} >{l.value}</SubmittedLetter>
                     </motion.div>)
             })}
             {EmptyArray.map((l, i) => {

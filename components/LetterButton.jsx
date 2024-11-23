@@ -6,7 +6,7 @@ import { alphabet } from '../lib/alphabet';
 export default function LetterButton({ letterInfo, Used, handleClick, value }) {
 
     const [Pressed, setPressed] = useState(false);
-
+    
     function handlePress() {
         setPressed(true)
         setTimeout(() => {
@@ -61,7 +61,7 @@ export default function LetterButton({ letterInfo, Used, handleClick, value }) {
             onClick={handlePress}
             onMouseDown={handlePress}
         >
-            {alphabet[letterInfo.letter]}
+            {letterInfo.value}
         </LetterButton>)
 
 }

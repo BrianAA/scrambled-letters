@@ -18,11 +18,14 @@ const LetterHolder = styled("div", {
 
 export default function ScrambleLetters({ handleClick, Letters, scrambledLetters }) {
     function handleUsed(_letterInfo) {
-        if (Letters.includes(_letterInfo)) {
-            return true;
-        } else {
-            return false;
+        let usedLetter=false;
+        for(let i=0;i<Letters.length;i++){
+            const id=Letters[i].id;
+            if(id==_letterInfo.id){
+                usedLetter=true;
+            }
         }
+        return usedLetter
     }
     return (
         <LetterHolder>
@@ -35,7 +38,7 @@ export default function ScrambleLetters({ handleClick, Letters, scrambledLetters
                         transition={{ duration: .1, delay: .2 * i }}
                     >
 
-                        <LetterButton Used={handleUsed(letterInfo)} handleClick={handleClick} letterInfo={letterInfo} />
+                        <LetterButton Used={handleUsed({id:i,value:letterInfo})} handleClick={handleClick} letterInfo={{id:i,value:letterInfo}} />
                     </motion.div>)
             })}
         </LetterHolder>
