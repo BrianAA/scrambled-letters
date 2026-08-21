@@ -30,15 +30,18 @@ export default function ScrambleLetters({ handleClick, Letters, scrambledLetters
     return (
         <LetterHolder>
             {scrambledLetters && scrambledLetters.map((letterInfo, i) => {
+                const info = typeof letterInfo === 'object' && letterInfo !== null && 'value' in letterInfo
+                    ? letterInfo
+                    : { id: i, value: letterInfo };
                 return (
                     <motion.div
-                        key={i}
+                        key={info.id}
                         initial={{ opacity: 0, y: 50 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: .1, delay: .2 * i }}
                     >
 
-                        <LetterButton Used={handleUsed({id:i,value:letterInfo})} handleClick={handleClick} letterInfo={{id:i,value:letterInfo}} />
+                        <LetterButton Used={handleUsed(info)} handleClick={handleClick} letterInfo={info} />
                     </motion.div>)
             })}
         </LetterHolder>
