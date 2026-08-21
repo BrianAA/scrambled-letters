@@ -62,7 +62,7 @@ async function GenerateWord(index) {
     if (index == 0) throw Error;
     let _stringID=dictionary[index];
     let _letters = dictionary[index].split("");
-    let _scrambled=await ScrambleLetters(_letters);
+    let _scrambled=await ScrambleLetters(_letters, index);
     console.log(_scrambled)
     return {
       success: true,
@@ -75,43 +75,62 @@ async function GenerateWord(index) {
     return {
       success: false,
       error: error,
+      details: error.message
     };
   }
 }
 
 
-async function ScrambleLetters(_letters) {
+function mulberry32(a) {
+  return function() {
+    let t = a += 0x6D2B79F5;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  }
+}
+
+function getSeed(str) {
+  let h = 1779033703 ^ str.length;
+  for (let i = 0; i < str.length; i++) {
+    h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
+    h = h << 13 | h >>> 19;
+  }
+  return (h ^ (h >>> 16)) >>> 0;
+}
+
+async function ScrambleLetters(_letters, index) {
+  const seedString = `${index}-${_letters.join("")}`;
+  const seedVal = getSeed(seedString);
+  const rand = mulberry32(seedVal);
+
   let _fullLetterSet = [];
   let _extraLetters = [];
-  let _FinalLetterSet = [];
   let _index = 0;
 
   while (_index < 5) {
-    let _randomLetter = Math.floor(Math.random() * 26);
-    while (_letters.includes(_randomLetter) || _randomLetter == 0) {
-      _randomLetter = Math.floor(Math.random() * 26);
+    let _randomLetter = Math.floor(rand() * 26);
+    let letter = alphabet[_randomLetter];
+    while (_letters.includes(letter) || _extraLetters.includes(letter) || _randomLetter === 0) {
+      _randomLetter = Math.floor(rand() * 26);
+      letter = alphabet[_randomLetter];
     }
-    _extraLetters.push(alphabet[_randomLetter]);
+    _extraLetters.push(letter);
     _index++;
   }
   _fullLetterSet = [..._letters, ..._extraLetters];
-  _index = _fullLetterSet.length;
   
-  while (_index != 0) {
-    const _randomIndex = Math.floor(Math.random() * _fullLetterSet.length);
-    if (_fullLetterSet[_randomIndex] != _fullLetterSet[_index]) {
-      _index--;
-    }
-
-    [_fullLetterSet[_index], _fullLetterSet[_randomIndex]] = [
-      _fullLetterSet[_randomIndex],
-      _fullLetterSet[_index],
-    ];
+  // Seeded Fisher-Yates Shuffle
+  let m = _fullLetterSet.length;
+  while (m) {
+    const i = Math.floor(rand() * m--);
+    const t = _fullLetterSet[m];
+    _fullLetterSet[m] = _fullLetterSet[i];
+    _fullLetterSet[i] = t;
   }
-  for (let i = 0; i < _fullLetterSet.length; i++) {
-    _FinalLetterSet.push(_fullLetterSet[i]);
-  }
-  return _FinalLetterSet;
+  
+  return _fullLetterSet;
 }
+
 
 
